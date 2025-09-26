@@ -17,14 +17,14 @@
 ssh pi@[ip-de-votre-pi]
 
 # Téléchargez et lancez l'installateur
-curl -sSL https://raw.githubusercontent.com/[username]/inky-photo-frame/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/install.sh | bash
 ```
 
 ### Méthode 2 : Installation manuelle
 
 ```bash
 # 1. Clonez le dépôt
-git clone https://github.com/[username]/inky-photo-frame.git
+git clone https://github.com/mehdi7129/inky-photo-frame.git
 cd inky-photo-frame
 
 # 2. Lancez l'installation
@@ -171,8 +171,8 @@ PHOTOS_DIR = Path('/home/pi/InkyPhotos')  # Dossier des photos
 
 ## 🆘 Support
 
-- **GitHub Issues :** [github.com/[username]/inky-photo-frame/issues](https://github.com/[username]/inky-photo-frame/issues)
-- **Documentation :** [github.com/[username]/inky-photo-frame](https://github.com/[username]/inky-photo-frame)
+- **GitHub Issues :** [github.com/mehdi7129/inky-photo-frame/issues](https://github.com/mehdi7129/inky-photo-frame/issues)
+- **Documentation :** [github.com/mehdi7129/inky-photo-frame](https://github.com/mehdi7129/inky-photo-frame)
 
 ## 💡 Astuces
 

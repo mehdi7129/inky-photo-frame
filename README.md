@@ -28,14 +28,14 @@ Transform your Inky Impression 7.3" e-ink display into a beautiful digital photo
 ### One-Line Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/[your-username]/inky-photo-frame/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/install.sh | bash
 ```
 
 ### Manual Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/[your-username]/inky-photo-frame.git
+git clone https://github.com/mehdi7129/inky-photo-frame.git
 cd inky-photo-frame
 ```
 
