@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Logs
+*.log
+logs/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+.inky_history.json
+InkyPhotos/
+photos/
+*.jpg
+*.jpeg
+*.png
+*.heic
+*.HEIC
+*.gif
+*.bmp
+
+# Backup files
+*.backup
+*.bak
+*~
