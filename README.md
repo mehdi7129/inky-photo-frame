@@ -15,7 +15,7 @@ Transform your Inky Impression 7.3" e-ink display into a beautiful digital photo
 - **HEIC Support**: Native support for iPhone photos + all common formats
 - **Smart Cropping**: Intelligent image processing for e-ink display
 - **Welcome Screen**: Shows connection instructions when no photos available
-- **Bluetooth WiFi Setup**: Configure WiFi via Bluetooth when no network connection
+- **Smart Bluetooth**: WiFi config via Bluetooth (10 min window after boot - saves energy)
 
 ## 🚀 Quick Installation
 
@@ -63,19 +63,18 @@ chmod +x install.sh
 
 Photos will display immediately on your Inky screen!
 
-## 📶 WiFi Configuration via Bluetooth
+## 📶 Smart WiFi Configuration via Bluetooth
 
 If your WiFi settings change or you need to connect to a new network:
 
-1. **Enable Bluetooth on your phone**
-2. **Pair with 'Inky-PhotoFrame'** in Bluetooth settings
-3. **Use a Bluetooth terminal app** (like Serial Bluetooth Terminal on Android or BlueTerm on iOS)
-4. **Connect and follow the menu**:
-   - Option 1: Scan for WiFi networks
-   - Option 2: Connect to a network
-   - Option 3: Check connection status
+1. **Reboot the Raspberry Pi** (unplug/replug power)
+2. **Within 10 minutes**, on your phone:
+   - Enable Bluetooth
+   - Pair with 'Inky-PhotoFrame'
+   - Use a Bluetooth terminal app (Serial Bluetooth Terminal on Android or BlueTerm on iOS)
+   - Follow the menu to configure WiFi
 
-This allows you to reconfigure WiFi without SSH access!
+**🔋 Energy Smart:** Bluetooth automatically shuts down after 10 minutes to save power!
 
 ## 🎨 How It Works
 

@@ -80,9 +80,9 @@ mkdir -p $INSTALL_DIR
 # Copy application files
 print_info "Copying application files..."
 cp inky_photo_frame.py $INSTALL_DIR/
-cp bluetooth_wifi_config.py $INSTALL_DIR/
+cp bluetooth_wifi_smart.py $INSTALL_DIR/
 chmod +x $INSTALL_DIR/inky_photo_frame.py
-chmod +x $INSTALL_DIR/bluetooth_wifi_config.py
+chmod +x $INSTALL_DIR/bluetooth_wifi_smart.py
 
 # Configure Samba
 print_info "Configuring SMB file sharing..."
@@ -160,20 +160,25 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
 
-# Create Bluetooth configuration service
-print_info "Creating Bluetooth WiFi configuration service..."
+# Create Bluetooth configuration service (auto-shutdown after 10 min)
+print_info "Creating Smart Bluetooth WiFi configuration service..."
 sudo tee /etc/systemd/system/inky-bluetooth-config.service > /dev/null << EOF
 [Unit]
-Description=Inky Photo Frame Bluetooth WiFi Configuration
-After=bluetooth.target
+Description=Inky Smart Bluetooth Config (10 min auto-shutdown)
+After=bluetooth.target network-pre.target
+Before=network.target
 
 [Service]
 Type=simple
-User=pi
+User=root
 WorkingDirectory=$INSTALL_DIR
-ExecStart=/usr/bin/python3 $INSTALL_DIR/bluetooth_wifi_config.py
-Restart=on-failure
-RestartSec=10
+ExecStart=/usr/bin/python3 $INSTALL_DIR/bluetooth_wifi_smart.py
+RemainAfterExit=no
+StandardOutput=journal
+StandardError=journal
+
+# Don't restart - runs once at boot for 10 minutes only
+Restart=no
 
 [Install]
 WantedBy=multi-user.target
