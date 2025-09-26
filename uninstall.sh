@@ -30,11 +30,14 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
-# Stop and disable service
-print_info "Arrêt du service..."
+# Stop and disable services
+print_info "Arrêt des services..."
 sudo systemctl stop inky-photo-frame
 sudo systemctl disable inky-photo-frame
+sudo systemctl stop inky-bluetooth-config
+sudo systemctl disable inky-bluetooth-config
 sudo rm /etc/systemd/system/inky-photo-frame.service
+sudo rm /etc/systemd/system/inky-bluetooth-config.service
 sudo systemctl daemon-reload
 
 # Remove SMB share
@@ -52,12 +55,12 @@ print_info "Conservation des photos et de l'historique..."
 
 # Optional: Remove user
 echo ""
-read -p "Voulez-vous supprimer l'utilisateur 'mehdi'? (y/n) " -n 1 -r
+read -p "Voulez-vous supprimer l'utilisateur 'inky'? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    sudo smbpasswd -x mehdi
-    sudo userdel mehdi
-    print_status "Utilisateur mehdi supprimé"
+    sudo smbpasswd -x inky
+    sudo userdel inky
+    print_status "Utilisateur inky supprimé"
 fi
 
 # Optional: Remove photos

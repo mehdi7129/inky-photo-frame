@@ -15,6 +15,7 @@ Transform your Inky Impression 7.3" e-ink display into a beautiful digital photo
 - **HEIC Support**: Native support for iPhone photo format
 - **Smart Cropping**: Intelligent image processing for e-ink display
 - **Welcome Screen**: Shows connection instructions when no photos available
+- **Bluetooth WiFi Setup**: Configure WiFi via Bluetooth when no network connection
 
 ## 🚀 Quick Installation
 
@@ -50,12 +51,26 @@ chmod +x install.sh
 2. Tap **Connect to Server** (in Browse tab, tap ...)
 3. Enter: `smb://[your-pi-ip]`
 4. Use credentials:
-   - **Username:** mehdi
-   - **Password:** 06hgAP89@#
+   - **Username:** inky
+   - **Password:** inkyimpression73_2025
 5. Open the **InkyPhotos** folder
 6. Add your photos (JPG, PNG, HEIC supported)
 
 Photos will display immediately on your Inky screen!
+
+## 📶 WiFi Configuration via Bluetooth
+
+If your WiFi settings change or you need to connect to a new network:
+
+1. **Enable Bluetooth on your phone**
+2. **Pair with 'Inky-PhotoFrame'** in Bluetooth settings
+3. **Use a Bluetooth terminal app** (like Serial Bluetooth Terminal on Android or BlueTerm on iOS)
+4. **Connect and follow the menu**:
+   - Option 1: Scan for WiFi networks
+   - Option 2: Connect to a network
+   - Option 3: Check connection status
+
+This allows you to reconfigure WiFi without SSH access!
 
 ## 🎨 How It Works
 

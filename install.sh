@@ -12,8 +12,8 @@ echo "╚═══════════════════════�
 echo ""
 
 # Variables
-USER_NAME="mehdi"
-USER_PASSWORD="06hgAP89@#"
+USER_NAME="inky"
+USER_PASSWORD="inkyimpression73_2025"
 SMB_SHARE_NAME="InkyPhotos"
 PHOTOS_DIR="/home/pi/InkyPhotos"
 INSTALL_DIR="/home/pi/inky-photo-frame"
@@ -51,7 +51,7 @@ sudo apt-get update
 
 # Install required system packages
 print_info "Installing required packages..."
-sudo apt-get install -y python3-pip python3-venv samba samba-common-bin git
+sudo apt-get install -y python3-pip python3-venv samba samba-common-bin git bluetooth bluez python3-serial
 
 # Create photos directory
 print_info "Creating photos directory..."
@@ -80,7 +80,9 @@ mkdir -p $INSTALL_DIR
 # Copy application files
 print_info "Copying application files..."
 cp inky_photo_frame.py $INSTALL_DIR/
+cp bluetooth_wifi_config.py $INSTALL_DIR/
 chmod +x $INSTALL_DIR/inky_photo_frame.py
+chmod +x $INSTALL_DIR/bluetooth_wifi_config.py
 
 # Configure Samba
 print_info "Configuring SMB file sharing..."
@@ -158,11 +160,32 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
 
-# Enable and start service
+# Create Bluetooth configuration service
+print_info "Creating Bluetooth WiFi configuration service..."
+sudo tee /etc/systemd/system/inky-bluetooth-config.service > /dev/null << EOF
+[Unit]
+Description=Inky Photo Frame Bluetooth WiFi Configuration
+After=bluetooth.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=$INSTALL_DIR
+ExecStart=/usr/bin/python3 $INSTALL_DIR/bluetooth_wifi_config.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start services
 print_info "Enabling automatic startup..."
 sudo systemctl daemon-reload
 sudo systemctl enable inky-photo-frame
 sudo systemctl start inky-photo-frame
+sudo systemctl enable inky-bluetooth-config
+sudo systemctl start inky-bluetooth-config
 
 # Get IP address
 IP_ADDRESS=$(hostname -I | cut -d' ' -f1)
