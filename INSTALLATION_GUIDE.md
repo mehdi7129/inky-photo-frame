@@ -6,7 +6,7 @@
 - **Carte SD** (8GB minimum) avec Raspberry Pi OS installé
 - **Écran Inky Impression 7.3"** (800x480 pixels)
 - **Connexion WiFi** configurée sur le Pi
-- **iPhone ou Android** pour uploader les photos
+- **Smartphone** (iPhone, Android, etc.) pour uploader les photos
 
 ## 🚀 Installation Rapide (5 minutes)
 
@@ -39,7 +39,7 @@ L'installation va :
 - ✅ Démarrer automatiquement au boot
 - ✅ Activer la configuration WiFi par Bluetooth
 
-## 📱 Configuration depuis iPhone
+## 📱 Configuration depuis votre téléphone
 
 ### 1. Premier démarrage
 Après l'installation, l'écran affiche les instructions de connexion avec :
@@ -49,7 +49,8 @@ Après l'installation, l'écran affiche les instructions de connexion avec :
 
 ### 2. Ajouter des photos
 
-1. **Sur votre iPhone**, ouvrez l'app **Fichiers** (Files)
+#### Depuis iPhone/iPad :
+1. Ouvrez l'app **Fichiers** (Files)
 2. Appuyez sur les **3 points** (...) en haut
 3. Sélectionnez **Se connecter au serveur**
 4. Entrez : `smb://[IP-du-raspberry]` (affiché sur l'écran)
@@ -65,10 +66,14 @@ Après l'installation, l'écran affiche les instructions de connexion avec :
 
 Si votre WiFi change (nouvelle box, nouveau mot de passe) :
 
-### Sur iPhone :
+### Configuration Bluetooth :
 
-1. **Installez l'app "Bluetooth Terminal"** depuis l'App Store
-2. **Activez le Bluetooth** sur votre iPhone
+#### iPhone/iPad :
+1. **Installez "Bluetooth Terminal"** ou **"BlueTerm"** depuis l'App Store
+
+#### Android :
+1. **Installez "Serial Bluetooth Terminal"** depuis Google Play Store
+2. **Activez le Bluetooth** sur votre téléphone
 3. Dans **Réglages → Bluetooth**, trouvez **"Inky-PhotoFrame"**
 4. **Appairez** votre iPhone avec l'appareil
 5. **Ouvrez Bluetooth Terminal**

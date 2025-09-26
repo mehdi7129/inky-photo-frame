@@ -75,7 +75,7 @@ class InkyPhotoFrame:
         try:
             import pillow_heif
             pillow_heif.register_heif_opener()
-            logging.info('HEIF support enabled for iPhone photos')
+            logging.info('HEIF support enabled for iPhone/modern phone photos')
         except ImportError:
             logging.info('HEIF support not available')
 
@@ -124,7 +124,7 @@ class InkyPhotoFrame:
         instructions = [
             ("Pour ajouter des photos:", normal_font, 'black'),
             ("", None, None),
-            ("1. Sur iPhone, ouvrez Files/Fichiers", small_font, 'darkblue'),
+            ("1. Sur votre téléphone, ouvrez l'app fichiers", small_font, 'darkblue'),
             (f"2. Connectez-vous à: smb://{ip_address}", small_font, 'darkblue'),
             ("", None, None),
             ("Identifiants de connexion:", normal_font, 'black'),

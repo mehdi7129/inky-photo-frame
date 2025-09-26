@@ -1,6 +1,6 @@
 # 📷 Inky Photo Frame
 
-Transform your Inky Impression 7.3" e-ink display into a beautiful digital photo frame controlled from your iPhone!
+Transform your Inky Impression 7.3" e-ink display into a beautiful digital photo frame controlled from any smartphone!
 
 ![Inky Impression 7.3"](https://img.shields.io/badge/Display-Inky%20Impression%207.3%22-purple)
 ![Raspberry Pi](https://img.shields.io/badge/Platform-Raspberry%20Pi-red)
@@ -11,8 +11,8 @@ Transform your Inky Impression 7.3" e-ink display into a beautiful digital photo
 - **Instant Display**: New photos appear immediately when added
 - **Daily Rotation**: Automatic photo change every day at 5AM
 - **Smart History**: Never repeats photos until all have been shown
-- **iPhone Compatible**: Upload photos directly from iOS Files app via SMB
-- **HEIC Support**: Native support for iPhone photo format
+- **Smartphone Compatible**: Upload photos from any phone (iPhone/Android) via SMB
+- **HEIC Support**: Native support for iPhone photos + all common formats
 - **Smart Cropping**: Intelligent image processing for e-ink display
 - **Welcome Screen**: Shows connection instructions when no photos available
 - **Bluetooth WiFi Setup**: Configure WiFi via Bluetooth when no network connection
@@ -45,10 +45,15 @@ chmod +x install.sh
 ./install.sh
 ```
 
-## 📱 Adding Photos from iPhone
+## 📱 Adding Photos from Your Phone
 
-1. Open the **Files** app on your iPhone
+### From iPhone/iPad:
+1. Open the **Files** app
 2. Tap **Connect to Server** (in Browse tab, tap ...)
+
+### From Android:
+1. Use a file manager like **Solid Explorer** or **CX File Explorer**
+2. Add a network location (SMB)
 3. Enter: `smb://[your-pi-ip]`
 4. Use credentials:
    - **Username:** inky
