@@ -19,18 +19,11 @@
 
 ## ✨ What Makes It Special?
 
-<table>
-<tr>
-<td width="50%">
-
 ### 🎨 **Beautiful E-Ink Display**
 - **800x480 pixels** - Crystal clear
 - **7 colors** - Vibrant Spectra display
 - **No backlight** - Easy on the eyes
 - **Persistent** - Image stays without power
-
-</td>
-<td width="50%">
 
 ### 🔋 **Ultra Low Power**
 - **0.6W average** - Less than an LED bulb
@@ -38,13 +31,7 @@
 - **10x more efficient** than LCD frames
 - **< 1€/year** electricity cost
 
-</td>
-</tr>
-</table>
-
 ## 📸 Features at a Glance
-
-<div align="center">
 
 | Feature | Description |
 |---------|------------|
@@ -54,8 +41,6 @@
 | 🔵 **Smart Bluetooth** | 10-minute WiFi setup window after boot |
 | 🖼️ **HEIC Support** | Native support for modern phone formats |
 | ✂️ **Smart Cropping** | Automatic optimization for e-ink |
-
-</div>
 
 ## 🚀 Quick Installation
 
@@ -72,41 +57,21 @@ That's it! The installer handles everything:
 
 ## 📱 Upload Photos from Your Phone
 
-<table>
-<tr>
-<td width="50%" align="center">
-
 ### iPhone / iPad
-
-📱 **Simple as 1-2-3**
-
 1. Open **Files** app
 2. Tap **Connect to Server**
 3. Enter: `smb://[your-pi-ip]`
 4. Login: `inky` / `inkyimpression73_2025`
 5. Drop photos in **InkyPhotos**
 
-</td>
-<td width="50%" align="center">
-
 ### Android
-
-🤖 **Quick & Easy**
-
-1. Install **CX File Explorer**
+1. Install **CX File Explorer** or **Solid Explorer**
 2. Add network location (SMB)
 3. Enter: `smb://[your-pi-ip]`
 4. Login: `inky` / `inkyimpression73_2025`
 5. Upload to **InkyPhotos**
 
-</td>
-</tr>
-</table>
-
 ## 🎯 How It Works
-
-<div align="center">
-</div>
 
 ### Welcome Screen
 When first powered on, the display shows:
@@ -135,37 +100,11 @@ graph LR
 
 ## 📦 What You Need
 
-<table>
-<tr>
-<td align="center">
-
-🖼️
-
-**Inky Impression 7.3"**
-
-[Buy from Pimoroni](https://shop.pimoroni.com/products/inky-impression-7-3)
-
-</td>
-<td align="center">
-
-🥧
-
-**Raspberry Pi Zero 2 W**
-
-Works with Zero 2W, 3, 4, or 5
-
-</td>
-<td align="center">
-
-🔌
-
-**Power Supply & SD Card**
-
-8GB+ SD card recommended
-
-</td>
-</tr>
-</table>
+- **🖼️ Inky Impression 7.3"** - [Buy from Pimoroni](https://shop.pimoroni.com/products/inky-impression-7-3)
+- **🥧 Raspberry Pi** - Zero 2W, 3, 4, or 5
+- **🔌 Power Supply** - 5V USB power
+- **💾 SD Card** - 8GB+ recommended
+- **📶 WiFi Network** - For photo uploads
 
 ## 🌟 Perfect For
 
@@ -177,16 +116,12 @@ Works with Zero 2W, 3, 4, or 5
 
 ## 📊 Power Consumption Comparison
 
-<div align="center">
-
 | Device | Power Usage | Annual Cost |
 |--------|------------|-------------|
 | **Inky Photo Frame** | 0.6W | < 1€ |
 | iPad Photo Frame | 2-3W | ~4€ |
 | LCD Digital Frame | 5-10W | ~13€ |
 | LED Light Bulb | 7W | ~9€ |
-
-</div>
 
 ## 🛠️ Advanced Configuration
 
