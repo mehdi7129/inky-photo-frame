@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Inky Impression 7.3"](https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-3-2_1500x1500_crop_center.jpg)
+## 🖼️ 800x480 • 7 Colors • E-Ink Display
 
 **Transform your Inky Impression 7.3" into a stunning digital photo frame**
 
@@ -78,7 +78,7 @@ That's it! The installer handles everything:
 
 ### iPhone / iPad
 
-<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/7colour-eink-2_1500x1500_crop_center.jpg" width="300">
+📱 **Simple as 1-2-3**
 
 1. Open **Files** app
 2. Tap **Connect to Server**
@@ -91,7 +91,7 @@ That's it! The installer handles everything:
 
 ### Android
 
-<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-3-4_1500x1500_crop_center.jpg" width="300">
+🤖 **Quick & Easy**
 
 1. Install **CX File Explorer**
 2. Add network location (SMB)
@@ -106,7 +106,6 @@ That's it! The installer handles everything:
 ## 🎯 How It Works
 
 <div align="center">
-<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-3-1_1500x1500_crop_center.jpg" width="600">
 </div>
 
 ### Welcome Screen
@@ -140,7 +139,7 @@ graph LR
 <tr>
 <td align="center">
 
-<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-3-3_500x500_crop_center.jpg" width="200">
+🖼️
 
 **Inky Impression 7.3"**
 
@@ -149,7 +148,7 @@ graph LR
 </td>
 <td align="center">
 
-<img src="https://www.raspberrypi.com/app/uploads/2022/02/zero2-close-up-500x283.jpg" width="200">
+🥧
 
 **Raspberry Pi Zero 2 W**
 
@@ -158,7 +157,7 @@ Works with Zero 2W, 3, 4, or 5
 </td>
 <td align="center">
 
-<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/standoff_500x500.jpg" width="200">
+🔌
 
 **Power Supply & SD Card**
 
@@ -236,7 +235,7 @@ MIT License - Feel free to use and modify!
 
 <div align="center">
 
-**Made with 🖼️ by [mehdi7129](https://github.com/mehdi7129)**
+**Created by [mehdi7129](https://github.com/mehdi7129)**
 
 [⬆ Back to top](#️-inky-photo-frame)
 
