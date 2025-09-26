@@ -1,102 +1,204 @@
-# 📷 Inky Photo Frame
+# 🖼️ Inky Photo Frame
 
-Transform your Inky Impression 7.3" e-ink display into a beautiful digital photo frame controlled from any smartphone!
+<div align="center">
 
-![Inky Impression 7.3"](https://img.shields.io/badge/Display-Inky%20Impression%207.3%22-purple)
-![Raspberry Pi](https://img.shields.io/badge/Platform-Raspberry%20Pi-red)
-![Python](https://img.shields.io/badge/Python-3.7+-blue)
+![Inky Impression 7.3"](https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-3-2_1500x1500_crop_center.jpg)
 
-## ✨ Features
+**Transform your Inky Impression 7.3" into a stunning digital photo frame**
 
-- **Instant Display**: New photos appear immediately when added
-- **Daily Rotation**: Automatic photo change every day at 5AM
-- **Smart History**: Never repeats photos until all have been shown
-- **Smartphone Compatible**: Upload photos from any phone (iPhone/Android) via SMB
-- **HEIC Support**: Native support for iPhone photos + all common formats
-- **Smart Cropping**: Intelligent image processing for e-ink display
-- **Welcome Screen**: Shows connection instructions when no photos available
-- **Smart Bluetooth**: WiFi config via Bluetooth (10 min window after boot - saves energy)
+[![GitHub](https://img.shields.io/github/stars/mehdi7129/inky-photo-frame?style=social)](https://github.com/mehdi7129/inky-photo-frame)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi-red)](https://www.raspberrypi.org/)
+[![Display](https://img.shields.io/badge/display-Inky%207.3%22-purple)](https://shop.pimoroni.com/products/inky-impression-7-3)
+
+[**📥 Quick Install**](#-quick-installation) • [**📱 Phone Setup**](#-upload-photos-from-your-phone) • [**🔧 WiFi Config**](#-smart-wifi-configuration) • [**📖 Full Guide**](INSTALLATION_GUIDE.md)
+
+</div>
+
+---
+
+## ✨ What Makes It Special?
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎨 **Beautiful E-Ink Display**
+- **800x480 pixels** - Crystal clear
+- **7 colors** - Vibrant Spectra display
+- **No backlight** - Easy on the eyes
+- **Persistent** - Image stays without power
+
+</td>
+<td width="50%">
+
+### 🔋 **Ultra Low Power**
+- **0.6W average** - Less than an LED bulb
+- **Zero power** when displaying
+- **10x more efficient** than LCD frames
+- **< 1€/year** electricity cost
+
+</td>
+</tr>
+</table>
+
+## 📸 Features at a Glance
+
+<div align="center">
+
+| Feature | Description |
+|---------|------------|
+| 📲 **Instant Display** | New photos appear immediately when added |
+| 🔄 **Smart Rotation** | Daily change at 5AM with intelligent history |
+| 📱 **Universal** | Works with iPhone, Android, any smartphone |
+| 🔵 **Smart Bluetooth** | 10-minute WiFi setup window after boot |
+| 🖼️ **HEIC Support** | Native support for modern phone formats |
+| ✂️ **Smart Cropping** | Automatic optimization for e-ink |
+
+</div>
 
 ## 🚀 Quick Installation
 
-### Prerequisites
-- Raspberry Pi (Zero 2W, 3, 4, or 5)
-- Inky Impression 7.3" display
-- WiFi connection
-- 30 minutes setup time
-
 ### One-Line Install
-
 ```bash
 curl -sSL https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/install.sh | bash
 ```
 
-### Manual Installation
+That's it! The installer handles everything:
+- ✅ Dependencies
+- ✅ SMB file sharing
+- ✅ Auto-start on boot
+- ✅ Bluetooth configuration
 
-1. Clone the repository:
-```bash
-git clone https://github.com/mehdi7129/inky-photo-frame.git
-cd inky-photo-frame
-```
+## 📱 Upload Photos from Your Phone
 
-2. Run the installer:
-```bash
-chmod +x install.sh
-./install.sh
-```
+<table>
+<tr>
+<td width="50%" align="center">
 
-## 📱 Adding Photos from Your Phone
+### iPhone / iPad
 
-### From iPhone/iPad:
-1. Open the **Files** app
-2. Tap **Connect to Server** (in Browse tab, tap ...)
+<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/7colour-eink-2_1500x1500_crop_center.jpg" width="300">
 
-### From Android:
-1. Use a file manager like **Solid Explorer** or **CX File Explorer**
-2. Add a network location (SMB)
+1. Open **Files** app
+2. Tap **Connect to Server**
 3. Enter: `smb://[your-pi-ip]`
-4. Use credentials:
-   - **Username:** inky
-   - **Password:** inkyimpression73_2025
-5. Open the **InkyPhotos** folder
-6. Add your photos (JPG, PNG, HEIC supported)
+4. Login: `inky` / `inkyimpression73_2025`
+5. Drop photos in **InkyPhotos**
 
-Photos will display immediately on your Inky screen!
+</td>
+<td width="50%" align="center">
 
-## 📶 Smart WiFi Configuration via Bluetooth
+### Android
 
-If your WiFi settings change or you need to connect to a new network:
+<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-3-4_1500x1500_crop_center.jpg" width="300">
 
-1. **Reboot the Raspberry Pi** (unplug/replug power)
-2. **Within 10 minutes**, on your phone:
-   - Enable Bluetooth
-   - Pair with 'Inky-PhotoFrame'
-   - Use a Bluetooth terminal app (Serial Bluetooth Terminal on Android or BlueTerm on iOS)
-   - Follow the menu to configure WiFi
+1. Install **CX File Explorer**
+2. Add network location (SMB)
+3. Enter: `smb://[your-pi-ip]`
+4. Login: `inky` / `inkyimpression73_2025`
+5. Upload to **InkyPhotos**
 
-**🔋 Energy Smart:** Bluetooth automatically shuts down after 10 minutes to save power!
+</td>
+</tr>
+</table>
 
-## 🎨 How It Works
+## 🎯 How It Works
 
-The Inky Photo Frame uses a combination of:
-- **File Watching**: Monitors the photos folder for new additions
-- **Smart Queue**: Maintains history to avoid repetition
-- **Daily Schedule**: Changes photos at 5AM automatically
-- **Image Processing**: Optimizes photos for e-ink display
+<div align="center">
+<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-3-1_1500x1500_crop_center.jpg" width="600">
+</div>
 
-## 📁 File Structure
+### Welcome Screen
+When first powered on, the display shows:
+- 📍 Your Raspberry Pi IP address
+- 🔐 Login credentials
+- 📝 Step-by-step instructions
 
+### Smart Photo Management
+```mermaid
+graph LR
+    A[Add Photo] -->|Instant| B[Display]
+    B --> C[Save History]
+    C --> D[Daily Rotation]
+    D -->|5AM| E[Next Photo]
+    E -->|Never Repeat| C
 ```
-/home/pi/
-├── InkyPhotos/              # Your photo library
-├── inky-photo-frame/        # Application files
-│   ├── inky_photo_frame.py  # Main application
-│   └── README.md           # Documentation
-├── .inky_history.json      # Photo history tracking
-└── inky_photo_frame.log    # Application logs
+
+## 🔧 Smart WiFi Configuration
+
+**Lost WiFi? No SSH needed!**
+
+1. 🔌 **Reboot** your Raspberry Pi
+2. 📱 **Connect** via Bluetooth within 10 minutes
+3. ⚙️ **Configure** new WiFi settings
+4. 🔋 **Auto-shutdown** Bluetooth after 10 min (saves energy!)
+
+## 📦 What You Need
+
+<table>
+<tr>
+<td align="center">
+
+<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-3-3_500x500_crop_center.jpg" width="200">
+
+**Inky Impression 7.3"**
+
+[Buy from Pimoroni](https://shop.pimoroni.com/products/inky-impression-7-3)
+
+</td>
+<td align="center">
+
+<img src="https://www.raspberrypi.com/app/uploads/2022/02/zero2-close-up-500x283.jpg" width="200">
+
+**Raspberry Pi Zero 2 W**
+
+Works with Zero 2W, 3, 4, or 5
+
+</td>
+<td align="center">
+
+<img src="https://cdn.shopify.com/s/files/1/0174/1800/files/standoff_500x500.jpg" width="200">
+
+**Power Supply & SD Card**
+
+8GB+ SD card recommended
+
+</td>
+</tr>
+</table>
+
+## 🌟 Perfect For
+
+- 🎁 **Personalized Gifts** - Load family photos before gifting
+- 🏠 **Home Decoration** - Modern, minimalist design
+- 👵 **Grandparents** - Simple to use, no tech knowledge needed
+- 🌱 **Eco-Friendly** - Ultra-low power consumption
+- 🎓 **Educational** - Learn about e-ink technology
+
+## 📊 Power Consumption Comparison
+
+<div align="center">
+
+| Device | Power Usage | Annual Cost |
+|--------|------------|-------------|
+| **Inky Photo Frame** | 0.6W | < 1€ |
+| iPad Photo Frame | 2-3W | ~4€ |
+| LCD Digital Frame | 5-10W | ~13€ |
+| LED Light Bulb | 7W | ~9€ |
+
+</div>
+
+## 🛠️ Advanced Configuration
+
+Edit `/home/pi/inky-photo-frame/inky_photo_frame.py`:
+
+```python
+CHANGE_HOUR = 5  # Change daily at this hour (24h format)
+PHOTOS_DIR = Path('/home/pi/InkyPhotos')  # Photo storage location
 ```
 
-## 🛠 Useful Commands
+## 📝 Commands
 
 ```bash
 # Check status
@@ -108,61 +210,34 @@ sudo journalctl -u inky-photo-frame -f
 # Restart service
 sudo systemctl restart inky-photo-frame
 
-# Stop service
-sudo systemctl stop inky-photo-frame
-
-# View photo history
-cat ~/.inky_history.json | python3 -m json.tool
+# Manual test
+python3 /home/pi/inky-photo-frame/inky_photo_frame.py
 ```
-
-## 🔧 Configuration
-
-Edit the configuration in `inky_photo_frame.py`:
-
-```python
-CHANGE_HOUR = 5  # Hour for daily change (24h format)
-PHOTOS_DIR = Path('/home/pi/InkyPhotos')  # Photos location
-```
-
-## 🗑 Uninstallation
-
-To remove the Inky Photo Frame:
-
-```bash
-chmod +x uninstall.sh
-./uninstall.sh
-```
-
-## 📝 Troubleshooting
-
-### Can't connect from iPhone
-- Ensure Pi and iPhone are on same network
-- Check Pi IP address: `hostname -I`
-- Verify SMB service: `sudo systemctl status smbd`
-
-### Photos not displaying
-- Check supported formats: JPG, PNG, HEIC
-- Verify service running: `sudo systemctl status inky-photo-frame`
-- Check logs: `tail -f /home/pi/inky_photo_frame.log`
-
-### Display not updating
-- E-ink displays take ~30 seconds to refresh
-- Check power connection to display
-- Restart service: `sudo systemctl restart inky-photo-frame`
-
-## 📄 License
-
-MIT License - Feel free to modify and share!
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Feel free to:
+- ⭐ Star this repo
+- 🐛 Report bugs
+- 💡 Suggest features
+- 🔀 Submit pull requests
+
+## 📄 License
+
+MIT License - Feel free to use and modify!
 
 ## 🙏 Acknowledgments
 
-- [Pimoroni](https://shop.pimoroni.com) for the amazing Inky display
+- [Pimoroni](https://pimoroni.com) for the amazing Inky display
 - Built with ❤️ for the Raspberry Pi community
+- Powered by Python and e-ink technology
 
 ---
 
-**Enjoy your digital photo frame!** 📷✨
+<div align="center">
+
+**Made with 🖼️ by [mehdi7129](https://github.com/mehdi7129)**
+
+[⬆ Back to top](#️-inky-photo-frame)
+
+</div>
