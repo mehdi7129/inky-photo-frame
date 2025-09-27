@@ -18,6 +18,7 @@ import sys
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import threading
+from threading import Timer
 import socket
 
 # Configuration
@@ -41,6 +42,8 @@ class PhotoHandler(FileSystemEventHandler):
     def __init__(self, slideshow):
         self.slideshow = slideshow
         self.image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.heic'}
+        self.pending_photos = []
+        self.timer = None
 
     def on_created(self, event):
         if event.is_directory:
@@ -50,10 +53,37 @@ class PhotoHandler(FileSystemEventHandler):
         path = Path(event.src_path)
         if path.suffix.lower() in self.image_extensions:
             logging.info(f'New photo detected: {path.name}')
-            # Wait for file to be completely written
-            time_module.sleep(2)
-            # Display the new photo immediately
-            self.slideshow.display_new_photo(str(path))
+
+            # Add to pending list
+            self.pending_photos.append(str(path))
+
+            # Cancel previous timer if exists
+            if self.timer:
+                self.timer.cancel()
+
+            # Wait 3 seconds for more uploads, then display only the last one
+            self.timer = threading.Timer(3.0, self.process_uploads)
+            self.timer.start()
+
+    def process_uploads(self):
+        """Process uploaded photos - only display the last one"""
+        if self.pending_photos:
+            # Get the last photo uploaded
+            last_photo = self.pending_photos[-1]
+            other_photos = self.pending_photos[:-1]
+
+            # Add all OTHER photos to pending queue (for 5AM rotation)
+            if other_photos:
+                logging.info(f'Adding {len(other_photos)} photos to queue for daily rotation')
+                for photo in other_photos:
+                    self.slideshow.add_to_queue(photo)
+
+            # Display only the LAST photo immediately
+            logging.info(f'Displaying only the last uploaded photo: {Path(last_photo).name}')
+            self.slideshow.display_new_photo(last_photo)
+
+            # Clear pending list
+            self.pending_photos = []
 
 class InkyPhotoFrame:
     def __init__(self):
@@ -274,6 +304,18 @@ class InkyPhotoFrame:
         except Exception as e:
             logging.error(f'Error displaying photo: {e}')
             return False
+
+    def add_to_queue(self, photo_path):
+        """Add a photo to the pending queue without displaying it"""
+        with self.lock:
+            # Add to pending list if not already there
+            if photo_path not in self.history['pending'] and photo_path != self.history['current']:
+                if photo_path not in self.history['shown']:
+                    self.history['pending'].append(photo_path)
+                    logging.info(f'Added {Path(photo_path).name} to queue for daily rotation')
+
+        # Save history
+        self.save_history()
 
     def display_new_photo(self, photo_path):
         """Display a newly added photo immediately"""
