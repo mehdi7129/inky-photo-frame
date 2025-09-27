@@ -10,6 +10,9 @@ echo "║     📷 Inky Photo Frame - Installation                 ║"
 echo "║     Pour Inky Impression 7.3\" (800x480)               ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo ""
+echo "⚠️  IMPORTANT: This script will enable I2C and SPI interfaces"
+echo "   These are REQUIRED for the Inky display to work properly"
+echo ""
 
 # Variables
 USER_NAME="inky"
@@ -44,6 +47,26 @@ if [ ! -f /proc/device-tree/model ]; then
 fi
 
 print_status "Starting installation..."
+
+# Enable I2C and SPI interfaces (REQUIRED for Inky display)
+print_info "Enabling I2C and SPI interfaces for Inky display..."
+sudo raspi-config nonint do_i2c 0
+if [ $? -eq 0 ]; then
+    print_status "I2C enabled successfully"
+else
+    print_error "Failed to enable I2C - Inky display may not work!"
+fi
+
+sudo raspi-config nonint do_spi 0
+if [ $? -eq 0 ]; then
+    print_status "SPI enabled successfully"
+else
+    print_error "Failed to enable SPI - Inky display may not work!"
+fi
+
+# Load modules immediately
+sudo modprobe i2c-dev
+sudo modprobe spi-bcm2835
 
 # Update system
 print_info "Updating system packages..."

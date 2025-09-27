@@ -50,6 +50,7 @@ curl -sSL https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/inst
 ```
 
 That's it! The installer handles everything:
+- ✅ Enables I2C and SPI (required for display)
 - ✅ Dependencies
 - ✅ SMB file sharing
 - ✅ Auto-start on boot
@@ -130,6 +131,19 @@ Edit `/home/pi/inky-photo-frame/inky_photo_frame.py`:
 ```python
 CHANGE_HOUR = 5  # Change daily at this hour (24h format)
 PHOTOS_DIR = Path('/home/pi/InkyPhotos')  # Photo storage location
+```
+
+## ⚠️ Troubleshooting
+
+### Display not working?
+```bash
+# Check if I2C and SPI are enabled
+ls /dev/i2c* /dev/spidev*
+
+# If not found, enable them:
+sudo raspi-config nonint do_i2c 0
+sudo raspi-config nonint do_spi 0
+sudo reboot
 ```
 
 ## 📝 Commands
