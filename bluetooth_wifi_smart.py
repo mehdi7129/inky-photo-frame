@@ -233,11 +233,11 @@ network={{
                             bt.write(b'Connecting...\r\n')
                             if self.connect_wifi(ssid, password):
                                 ip = self.get_ip_address()
-                                bt.write(f'✅ Connected! IP: {ip}\r\n'.encode())
+                                bt.write(f'Connected! IP: {ip}\r\n'.encode())
                                 # Extend timeout by 2 minutes after successful config
                                 self.shutdown_time = datetime.now() + timedelta(minutes=2)
                             else:
-                                bt.write(b'❌ Failed\r\n')
+                                bt.write('Failed\r\n'.encode())
 
                         elif cmd == '3':
                             ip = self.get_ip_address()
