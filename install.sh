@@ -100,10 +100,24 @@ pip install pillow pillow-heif watchdog
 print_info "Creating application directory..."
 mkdir -p $INSTALL_DIR
 
-# Copy application files
-print_info "Copying application files..."
-cp inky_photo_frame.py $INSTALL_DIR/
-cp bluetooth_wifi_smart.py $INSTALL_DIR/
+# Download application files from GitHub
+print_info "Downloading application files from GitHub..."
+
+# Always download from GitHub for consistency
+curl -sSL -o $INSTALL_DIR/inky_photo_frame.py https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/inky_photo_frame.py
+if [ $? -ne 0 ]; then
+    print_error "Failed to download inky_photo_frame.py"
+    exit 1
+fi
+
+curl -sSL -o $INSTALL_DIR/bluetooth_wifi_smart.py https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/bluetooth_wifi_smart.py
+if [ $? -ne 0 ]; then
+    print_error "Failed to download bluetooth_wifi_smart.py"
+    exit 1
+fi
+
+print_status "Application files downloaded successfully"
+
 chmod +x $INSTALL_DIR/inky_photo_frame.py
 chmod +x $INSTALL_DIR/bluetooth_wifi_smart.py
 
