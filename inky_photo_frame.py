@@ -24,7 +24,7 @@ import socket
 import subprocess
 
 # Configuration
-PHOTOS_DIR = Path('/home/pi/InkyPhotos')
+PHOTOS_DIR = Path('/home/pi/Images')
 HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
@@ -232,7 +232,7 @@ class InkyPhotoFrame:
 
         # Bottom message
         y_pos += 25
-        bottom_text = "Drop your photos in the InkyPhotos folder"
+        bottom_text = "Drop your photos in the Images folder"
         bbox = draw.textbbox((0, 0), bottom_text, font=small_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), bottom_text, font=small_font, fill='purple')

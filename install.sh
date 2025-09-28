@@ -17,8 +17,8 @@ echo ""
 # Variables
 USER_NAME="inky"
 USER_PASSWORD="inkyimpression73_2025"
-SMB_SHARE_NAME="InkyPhotos"
-PHOTOS_DIR="/home/pi/InkyPhotos"
+SMB_SHARE_NAME="Images"
+PHOTOS_DIR="/home/pi/Images"
 INSTALL_DIR="/home/pi/inky-photo-frame"
 
 # Colors for output
@@ -131,7 +131,7 @@ sudo cp /etc/samba/smb.conf /etc/samba/smb.conf.backup
 sudo tee -a /etc/samba/smb.conf > /dev/null << EOF
 
 [$SMB_SHARE_NAME]
-   comment = Inky Photo Frame Photos
+   comment = Photo Frame Images
    path = $PHOTOS_DIR
    browseable = yes
    read only = no
@@ -244,7 +244,7 @@ cat > $INSTALL_DIR/README.md << EOF
 4. Utilisez ces identifiants:
    - **Utilisateur:** $USER_NAME
    - **Mot de passe:** $USER_PASSWORD
-5. Ouvrez le dossier **$SMB_SHARE_NAME**
+5. Ouvrez le dossier **Images**
 6. Déposez vos photos (JPG, PNG, HEIC supportés)
 
 ## ✨ Fonctionnalités

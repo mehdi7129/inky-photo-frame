@@ -75,14 +75,14 @@ That's it! The installer handles everything:
 2. Tap **Connect to Server**
 3. Enter: `smb://[your-pi-ip]`
 4. Login: `inky` / `inkyimpression73_2025`
-5. Drop photos in **InkyPhotos**
+5. Drop photos in **Images**
 
 ### Android
 1. Install **CX File Explorer** or **Solid Explorer**
 2. Add network location (SMB)
 3. Enter: `smb://[your-pi-ip]`
 4. Login: `inky` / `inkyimpression73_2025`
-5. Upload to **InkyPhotos**
+5. Upload to **Images**
 
 ## 🎯 How It Works
 
@@ -165,7 +165,7 @@ Edit `/home/pi/inky-photo-frame/inky_photo_frame.py`:
 
 ```python
 CHANGE_HOUR = 5  # Change daily at this hour (24h format)
-PHOTOS_DIR = Path('/home/pi/InkyPhotos')  # Photo storage location
+PHOTOS_DIR = Path('/home/pi/Images')  # Photo storage location
 ```
 
 ### Adjust Color Saturation
