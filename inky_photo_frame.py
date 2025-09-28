@@ -121,44 +121,98 @@ class InkyPhotoFrame:
             return "192.168.1.xxx"
 
     def display_welcome(self):
-        """Display welcome screen with IP address only"""
+        """Display welcome screen with connection instructions in French"""
         logging.info('Displaying welcome screen')
 
         # Create welcome image - pure white background
         img = Image.new('RGB', (self.width, self.height), color='white')
         draw = ImageDraw.Draw(img)
 
-        # Try to use large bold font
+        # Try to use nice fonts with different sizes
         try:
-            # Use the largest font size for maximum readability
-            ip_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
-            status_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+            ip_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 56)
+            normal_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
+            small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
+            cred_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 26)
         except:
-            ip_font = ImageFont.load_default()
-            status_font = ip_font
+            title_font = ImageFont.load_default()
+            ip_font = title_font
+            normal_font = title_font
+            small_font = title_font
+            cred_font = title_font
 
         ip_address = self.get_ip_address()
 
-        # Display IP address in the center - large and bold
-        ip_text = ip_address
+        # Title
+        y_pos = 30
+        title = "Cadre Photo Connecté"
+        bbox = draw.textbbox((0, 0), title, font=title_font)
+        x = (self.width - (bbox[2] - bbox[0])) // 2
+        draw.text((x, y_pos), title, font=title_font, fill='black')
+
+        # Separator line
+        y_pos += 60
+        draw.line([(100, y_pos), (700, y_pos)], fill='black', width=2)
+
+        # Connection section
+        y_pos += 25
+        text = "Pour ajouter vos photos :"
+        bbox = draw.textbbox((0, 0), text, font=normal_font)
+        x = (self.width - (bbox[2] - bbox[0])) // 2
+        draw.text((x, y_pos), text, font=normal_font, fill='black')
+
+        # IP Address - prominent
+        y_pos += 45
+        ip_text = f"smb://{ip_address}"
         bbox = draw.textbbox((0, 0), ip_text, font=ip_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
-        y = (self.height - (bbox[3] - bbox[1])) // 2 - 50
-        draw.text((x, y), ip_text, font=ip_font, fill='black')
+        draw.text((x, y_pos), ip_text, font=ip_font, fill='darkblue')
 
-        # Add status message below
-        status_text = "Connected to Internet"
-        bbox = draw.textbbox((0, 0), status_text, font=status_font)
-        x = (self.width - (bbox[2] - bbox[0])) // 2
-        y = y + 100
-        draw.text((x, y), status_text, font=status_font, fill='black')
+        # Instructions
+        y_pos += 70
+        instructions = [
+            ("iPhone / iPad :", normal_font, 'black'),
+            ("Ouvrez Fichiers → Se connecter au serveur", small_font, 'darkgreen'),
+            ("", None, None),
+            ("Android :", normal_font, 'black'),
+            ("CX File Explorer → Réseau → SMB", small_font, 'darkgreen'),
+        ]
 
-        # Add second line
-        status_text2 = "Installation almost complete"
-        bbox = draw.textbbox((0, 0), status_text2, font=status_font)
+        for text, font, color in instructions:
+            if font:
+                bbox = draw.textbbox((0, 0), text, font=font)
+                x = (self.width - (bbox[2] - bbox[0])) // 2
+                draw.text((x, y_pos), text, font=font, fill=color)
+                y_pos += 30 if font == small_font else 35
+            else:
+                y_pos += 10
+
+        # Credentials box
+        y_pos += 10
+        draw.line([(150, y_pos), (650, y_pos)], fill='gray', width=1)
+        y_pos += 15
+
+        cred_text = "Utilisateur : inky"
+        bbox = draw.textbbox((0, 0), cred_text, font=cred_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
-        y = y + 50
-        draw.text((x, y), status_text2, font=status_font, fill='black')
+        draw.text((x, y_pos), cred_text, font=cred_font, fill='black')
+
+        y_pos += 35
+        cred_text = "Mot de passe : inkyimpression73_2025"
+        bbox = draw.textbbox((0, 0), cred_text, font=cred_font)
+        x = (self.width - (bbox[2] - bbox[0])) // 2
+        draw.text((x, y_pos), cred_text, font=cred_font, fill='black')
+
+        y_pos += 20
+        draw.line([(150, y_pos), (650, y_pos)], fill='gray', width=1)
+
+        # Bottom message
+        y_pos += 25
+        bottom_text = "Déposez vos photos dans le dossier InkyPhotos"
+        bbox = draw.textbbox((0, 0), bottom_text, font=small_font)
+        x = (self.width - (bbox[2] - bbox[0])) // 2
+        draw.text((x, y_pos), bottom_text, font=small_font, fill='purple')
 
         # Display the welcome screen
         try:
