@@ -68,16 +68,24 @@ fi
 sudo modprobe i2c-dev
 sudo modprobe spi-bcm2835
 
-# Fix GPIO conflict for Inky display
+# Fix GPIO conflict for Inky display - MUST BE DONE EARLY!
 print_info "Configuring GPIO for Inky display..."
 # Check if the dtoverlay line already exists
 if ! grep -q "dtoverlay=spi0-1cs,cs0_pin=7" /boot/config.txt; then
     echo "dtoverlay=spi0-1cs,cs0_pin=7" | sudo tee -a /boot/config.txt > /dev/null
     print_status "GPIO configuration added to /boot/config.txt"
-    print_info "⚠️  A reboot will be required after installation for GPIO changes to take effect"
     REBOOT_REQUIRED=true
 else
     print_status "GPIO configuration already present"
+fi
+
+# Also check if the dtoverlay line exists in firmware config
+if [ -f /boot/firmware/config.txt ]; then
+    if ! grep -q "dtoverlay=spi0-1cs,cs0_pin=7" /boot/firmware/config.txt; then
+        echo "dtoverlay=spi0-1cs,cs0_pin=7" | sudo tee -a /boot/firmware/config.txt > /dev/null
+        print_status "GPIO configuration added to /boot/firmware/config.txt"
+        REBOOT_REQUIRED=true
+    fi
 fi
 
 # Update system
@@ -233,13 +241,20 @@ Restart=no
 WantedBy=multi-user.target
 EOF
 
-# Enable and start services
+# Enable services (but don't start them if reboot is required)
 print_info "Enabling automatic startup..."
 sudo systemctl daemon-reload
 sudo systemctl enable inky-photo-frame
-sudo systemctl start inky-photo-frame
 sudo systemctl enable inky-bluetooth-config
-sudo systemctl start inky-bluetooth-config
+
+# Only start services if no reboot is required (i.e., GPIO already configured)
+if [ "$REBOOT_REQUIRED" != true ]; then
+    print_info "Starting services..."
+    sudo systemctl start inky-photo-frame
+    sudo systemctl start inky-bluetooth-config
+else
+    print_info "Services will start automatically after reboot"
+fi
 
 # Get IP address
 IP_ADDRESS=$(hostname -I | cut -d' ' -f1)
@@ -291,10 +306,12 @@ sudo systemctl stop inky-photo-frame
 - Historique: /home/pi/.inky_history.json
 EOF
 
-# Final status check
-print_info "Checking service status..."
-sleep 3
-sudo systemctl status inky-photo-frame --no-pager
+# Final status check only if services were started
+if [ "$REBOOT_REQUIRED" != true ]; then
+    print_info "Checking service status..."
+    sleep 3
+    sudo systemctl status inky-photo-frame --no-pager || true
+fi
 
 echo ""
 echo "╔════════════════════════════════════════════════════════╗"
@@ -319,12 +336,19 @@ print_info "Consultez $INSTALL_DIR/README.md pour plus d'infos"
 if [ "$REBOOT_REQUIRED" = true ]; then
     echo ""
     echo "╔════════════════════════════════════════════════════════╗"
-    echo "║     ⚠️  IMPORTANT: REBOOT REQUIRED                      ║"
+    echo "║     ⚠️  REBOOT REQUIRED - IMPORTANT!                    ║"
     echo "╚════════════════════════════════════════════════════════╝"
     echo ""
-    echo "GPIO configuration has been updated."
-    echo "Please reboot your Raspberry Pi for the changes to take effect:"
+    echo "The Inky display GPIO configuration has been updated."
+    echo "A reboot is REQUIRED for the photo frame to work."
+    echo ""
+    echo "After reboot:"
+    echo "1. The welcome screen will appear on your Inky display"
+    echo "2. You can connect from your phone to add photos"
+    echo ""
+    echo "Please reboot now:"
     echo ""
     echo "  sudo reboot"
     echo ""
+    echo "The photo frame will start automatically after reboot."
 fi

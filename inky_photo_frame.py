@@ -97,13 +97,8 @@ class PhotoHandler(FileSystemEventHandler):
 
 class InkyPhotoFrame:
     def __init__(self):
-        # Fix GPIO conflict - release SPI device first
-        try:
-            # Try to release any existing SPI claims
-            subprocess.run(['sudo', 'dtoverlay', '-r', 'spi0-1cs'], check=False, capture_output=True)
-            time_module.sleep(0.5)
-        except:
-            pass
+        # Fix GPIO conflict - comprehensive approach
+        self.fix_gpio_conflict()
 
         # Initialize display with retry logic
         retry_count = 0
@@ -118,10 +113,24 @@ class InkyPhotoFrame:
                 retry_count += 1
                 if retry_count < 3:
                     logging.warning(f'Display init attempt {retry_count} failed: {e}, retrying...')
+                    # Try fixing GPIO again before retry
+                    self.fix_gpio_conflict()
                     time_module.sleep(2)
                 else:
                     logging.error(f'Failed to initialize display after 3 attempts: {e}')
-                    raise
+                    # Last attempt - try with manual SPI reset
+                    try:
+                        logging.info('Attempting manual SPI reset...')
+                        subprocess.run(['sudo', 'modprobe', '-r', 'spi_bcm2835'], check=False, capture_output=True)
+                        time_module.sleep(1)
+                        subprocess.run(['sudo', 'modprobe', 'spi_bcm2835'], check=False, capture_output=True)
+                        time_module.sleep(1)
+                        from inky.auto import auto
+                        self.display = auto()
+                        self.width, self.height = self.display.resolution
+                        logging.info(f'Display initialized after SPI reset: {self.width}x{self.height}')
+                    except:
+                        raise
 
         # Create photos directory if not exists
         PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
@@ -131,6 +140,22 @@ class InkyPhotoFrame:
 
         # Threading lock for safe history updates
         self.lock = threading.Lock()
+
+    def fix_gpio_conflict(self):
+        """Comprehensive GPIO conflict resolution"""
+        try:
+            # Method 1: Try to release any existing SPI claims
+            subprocess.run(['sudo', 'dtoverlay', '-r', 'spi0-1cs'], check=False, capture_output=True)
+            time_module.sleep(0.2)
+
+            # Method 2: Reset SPI parameters
+            subprocess.run(['sudo', 'dtparam', 'spi=off'], check=False, capture_output=True)
+            time_module.sleep(0.2)
+            subprocess.run(['sudo', 'dtparam', 'spi=on'], check=False, capture_output=True)
+            time_module.sleep(0.2)
+        except Exception as e:
+            logging.debug(f'GPIO conflict fix attempt: {e}')
+            pass
 
         # Register HEIF support if available
         try:
