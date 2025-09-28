@@ -48,28 +48,38 @@ fi
 
 print_status "Starting installation..."
 
-# Enable I2C and SPI interfaces (REQUIRED for Inky display)
-print_info "Enabling I2C and SPI interfaces for Inky display..."
+# STEP 1: Enable I2C and SPI interfaces FIRST (CRITICAL for Inky display)
+print_info "STEP 1: Enabling I2C and SPI interfaces (REQUIRED for Inky display)..."
+print_info "This is the FIRST and MOST IMPORTANT step"
+
+# Enable I2C
 sudo raspi-config nonint do_i2c 0
 if [ $? -eq 0 ]; then
-    print_status "I2C enabled successfully"
+    print_status "✅ I2C enabled successfully"
 else
-    print_error "Failed to enable I2C - Inky display may not work!"
+    print_error "Failed to enable I2C - Installation cannot continue!"
+    print_error "The Inky display REQUIRES I2C to function"
+    exit 1
 fi
 
+# Enable SPI
 sudo raspi-config nonint do_spi 0
 if [ $? -eq 0 ]; then
-    print_status "SPI enabled successfully"
+    print_status "✅ SPI enabled successfully"
 else
-    print_error "Failed to enable SPI - Inky display may not work!"
+    print_error "Failed to enable SPI - Installation cannot continue!"
+    print_error "The Inky display REQUIRES SPI to function"
+    exit 1
 fi
 
 # Load modules immediately
+print_info "Loading I2C and SPI kernel modules..."
 sudo modprobe i2c-dev
 sudo modprobe spi-bcm2835
+print_status "✅ I2C and SPI kernel modules loaded"
 
-# Fix GPIO conflict for Inky display - MUST BE DONE EARLY!
-print_info "Configuring GPIO for Inky display..."
+# STEP 2: Fix GPIO conflict for Inky display (AFTER I2C/SPI)
+print_info "STEP 2: Configuring GPIO for Inky display..."
 # Check if the dtoverlay line already exists
 if ! grep -q "dtoverlay=spi0-1cs,cs0_pin=7" /boot/config.txt; then
     echo "dtoverlay=spi0-1cs,cs0_pin=7" | sudo tee -a /boot/config.txt > /dev/null
@@ -88,40 +98,40 @@ if [ -f /boot/firmware/config.txt ]; then
     fi
 fi
 
-# Update system
-print_info "Updating system packages..."
+# STEP 3: Update system
+print_info "STEP 3: Updating system packages..."
 sudo apt-get update
 
-# Install required system packages
-print_info "Installing required packages..."
+# STEP 4: Install required system packages
+print_info "STEP 4: Installing required packages..."
 sudo apt-get install -y python3-pip python3-venv samba samba-common-bin git bluetooth bluez python3-serial
 
-# Create photos directory
-print_info "Creating photos directory..."
+# STEP 5: Create photos directory
+print_info "STEP 5: Creating photos directory..."
 mkdir -p $PHOTOS_DIR
 sudo chown pi:pi $PHOTOS_DIR
 chmod 755 $PHOTOS_DIR
 
-# Setup Python virtual environment
-print_info "Setting up Python virtual environment..."
+# STEP 6: Setup Python virtual environment
+print_info "STEP 6: Setting up Python virtual environment..."
 python3 -m venv ~/.virtualenvs/pimoroni
 source ~/.virtualenvs/pimoroni/bin/activate
 
-# Install Inky library
-print_info "Installing Inky library..."
+# STEP 7: Install Inky library
+print_info "STEP 7: Installing Inky library..."
 pip install --upgrade pip
 pip install inky[rpi,example-depends]
 
-# Install additional Python packages
-print_info "Installing Python dependencies..."
+# STEP 8: Install additional Python packages
+print_info "STEP 8: Installing Python dependencies..."
 pip install pillow pillow-heif watchdog
 
-# Create installation directory
-print_info "Creating application directory..."
+# STEP 9: Create installation directory
+print_info "STEP 9: Creating application directory..."
 mkdir -p $INSTALL_DIR
 
-# Download application files from GitHub
-print_info "Downloading application files from GitHub..."
+# STEP 10: Download application files from GitHub
+print_info "STEP 10: Downloading application files from GitHub..."
 
 # Always download from GitHub for consistency
 curl -sSL -o $INSTALL_DIR/inky_photo_frame.py https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/inky_photo_frame.py
@@ -141,8 +151,8 @@ print_status "Application files downloaded successfully"
 chmod +x $INSTALL_DIR/inky_photo_frame.py
 chmod +x $INSTALL_DIR/bluetooth_wifi_smart.py
 
-# Configure Samba
-print_info "Configuring SMB file sharing..."
+# STEP 11: Configure Samba
+print_info "STEP 11: Configuring SMB file sharing..."
 
 # Backup existing smb.conf
 sudo cp /etc/samba/smb.conf /etc/samba/smb.conf.backup
@@ -173,8 +183,8 @@ sudo tee -a /etc/samba/smb.conf > /dev/null << EOF
    fruit:delete_empty_adfiles = yes
 EOF
 
-# Create SMB user
-print_info "Creating SMB user '$USER_NAME'..."
+# STEP 12: Create SMB user
+print_info "STEP 12: Creating SMB user '$USER_NAME'..."
 # Check if user exists
 if id "$USER_NAME" &>/dev/null; then
     print_info "User $USER_NAME already exists"
@@ -195,8 +205,8 @@ print_info "Restarting SMB service..."
 sudo systemctl restart smbd
 sudo systemctl enable smbd
 
-# Create systemd service
-print_info "Creating system service for automatic startup..."
+# STEP 13: Create systemd service
+print_info "STEP 13: Creating system service for automatic startup..."
 sudo tee /etc/systemd/system/inky-photo-frame.service > /dev/null << EOF
 [Unit]
 Description=Inky Photo Frame Display Service
@@ -217,8 +227,8 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
 
-# Create Bluetooth configuration service (auto-shutdown after 10 min)
-print_info "Creating Smart Bluetooth WiFi configuration service..."
+# STEP 14: Create Bluetooth configuration service (auto-shutdown after 10 min)
+print_info "STEP 14: Creating Smart Bluetooth WiFi configuration service..."
 sudo tee /etc/systemd/system/inky-bluetooth-config.service > /dev/null << EOF
 [Unit]
 Description=Inky Smart Bluetooth Config (10 min auto-shutdown)
@@ -241,8 +251,8 @@ Restart=no
 WantedBy=multi-user.target
 EOF
 
-# Enable services (but don't start them if reboot is required)
-print_info "Enabling automatic startup..."
+# STEP 15: Enable services (but don't start them if reboot is required)
+print_info "STEP 15: Enabling automatic startup..."
 sudo systemctl daemon-reload
 sudo systemctl enable inky-photo-frame
 sudo systemctl enable inky-bluetooth-config
