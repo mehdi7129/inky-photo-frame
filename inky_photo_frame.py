@@ -78,11 +78,19 @@ class PhotoHandler(FileSystemEventHandler):
             if other_photos:
                 logging.info(f'Adding {len(other_photos)} photos to queue for daily rotation')
                 for photo in other_photos:
-                    self.slideshow.add_to_queue(photo)
+                    try:
+                        self.slideshow.add_to_queue(photo)
+                    except Exception as e:
+                        logging.error(f'Error adding {photo} to queue: {e}')
 
             # Display only the LAST photo immediately
             logging.info(f'Displaying only the last uploaded photo: {Path(last_photo).name}')
-            self.slideshow.display_new_photo(last_photo)
+            try:
+                self.slideshow.display_new_photo(last_photo)
+            except Exception as e:
+                logging.error(f'Error displaying new photo: {e}')
+                # Don't let errors stop the file watcher
+                pass
 
             # Clear pending list
             self.pending_photos = []
@@ -372,13 +380,29 @@ class InkyPhotoFrame:
                 try:
                     self.display.show()
                     logging.info(f'Successfully displayed: {Path(photo_path).name}')
+
+                    # IMPORTANT: Clean up display connection after each use to prevent "transport endpoint shutdown"
+                    try:
+                        # Force cleanup of the display object
+                        if hasattr(self.display, '_spi'):
+                            self.display._spi.close()
+                        del self.display
+                        logging.info('Display connection cleaned up')
+                        # Reinitialize for next use
+                        time_module.sleep(1)
+                        from inky.auto import auto
+                        self.display = auto()
+                        logging.info('Display reinitialized for next image')
+                    except Exception as cleanup_error:
+                        logging.warning(f'Cleanup warning: {cleanup_error}')
+
                     return True
                 except Exception as show_error:
-                    if "GPIO" in str(show_error) or "pins we need are in use" in str(show_error):
+                    if "GPIO" in str(show_error) or "pins we need are in use" in str(show_error) or "Cannot send" in str(show_error):
                         retry_count += 1
                         if retry_count < 3:
-                            logging.warning(f'GPIO conflict on attempt {retry_count}, retrying...')
-                            # Try to reset SPI
+                            logging.warning(f'Display error on attempt {retry_count}: {show_error}, retrying...')
+                            # Try to reset everything
                             subprocess.run(['sudo', 'modprobe', '-r', 'spidev'], check=False, capture_output=True)
                             subprocess.run(['sudo', 'modprobe', '-r', 'spi_bcm2835'], check=False, capture_output=True)
                             time_module.sleep(1)
@@ -425,8 +449,20 @@ class InkyPhotoFrame:
             if photo_path in self.history['pending']:
                 self.history['pending'].remove(photo_path)
 
-        # Display the photo
-        success = self.display_photo(photo_path)
+        # Display the photo with error handling
+        try:
+            success = self.display_photo(photo_path)
+        except Exception as e:
+            logging.error(f'Failed to display photo {Path(photo_path).name}: {e}')
+            logging.info('Attempting to reinitialize display...')
+            try:
+                # Try to reinitialize display
+                from inky.auto import auto
+                self.display = auto()
+                success = self.display_photo(photo_path)
+            except Exception as e2:
+                logging.error(f'Reinitialize failed: {e2}')
+                success = False
 
         # Save history
         self.save_history()
@@ -526,7 +562,17 @@ class InkyPhotoFrame:
 
                 # Check for daily change
                 if self.should_change_photo():
-                    self.change_photo()
+                    try:
+                        self.change_photo()
+                    except Exception as e:
+                        logging.error(f'Error changing photo: {e}')
+                        # Try to reinitialize display
+                        try:
+                            from inky.auto import auto
+                            self.display = auto()
+                            logging.info('Display reinitialized after error')
+                        except:
+                            pass
 
                 # Check for new photos periodically
                 if datetime.now().minute == 0:  # Every hour
@@ -535,6 +581,14 @@ class InkyPhotoFrame:
                     # Show welcome if no photos
                     if not self.get_all_photos() and self.history['current'] is None:
                         self.display_welcome()
+
+                # Check if observer is still alive, restart if needed
+                if not observer.is_alive():
+                    logging.warning('File watcher stopped, restarting...')
+                    observer = Observer()
+                    observer.schedule(event_handler, str(PHOTOS_DIR), recursive=False)
+                    observer.start()
+                    logging.info('File watcher restarted')
 
         except KeyboardInterrupt:
             logging.info('Stopping photo frame')
