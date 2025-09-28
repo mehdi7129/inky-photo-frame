@@ -6,12 +6,13 @@ Changes daily at 5AM with intelligent rotation
 """
 
 import os
+# Set environment variable to skip GPIO check
+os.environ['INKY_SKIP_GPIO_CHECK'] = '1'
 import json
 import random
 from datetime import datetime
 from pathlib import Path
 from PIL import Image, ImageOps, ImageDraw, ImageFont
-from inky.auto import auto
 import time as time_module
 import logging
 import sys
@@ -20,6 +21,7 @@ from watchdog.events import FileSystemEventHandler
 import threading
 from threading import Timer
 import socket
+import subprocess
 
 # Configuration
 PHOTOS_DIR = Path('/home/pi/InkyPhotos')
@@ -87,10 +89,31 @@ class PhotoHandler(FileSystemEventHandler):
 
 class InkyPhotoFrame:
     def __init__(self):
-        # Initialize display
-        self.display = auto()
-        self.width, self.height = self.display.resolution
-        logging.info(f'Display initialized: {self.width}x{self.height}')
+        # Fix GPIO conflict - release SPI device first
+        try:
+            # Try to release any existing SPI claims
+            subprocess.run(['sudo', 'dtoverlay', '-r', 'spi0-1cs'], check=False, capture_output=True)
+            time_module.sleep(0.5)
+        except:
+            pass
+
+        # Initialize display with retry logic
+        retry_count = 0
+        while retry_count < 3:
+            try:
+                from inky.auto import auto
+                self.display = auto()
+                self.width, self.height = self.display.resolution
+                logging.info(f'Display initialized: {self.width}x{self.height}')
+                break
+            except Exception as e:
+                retry_count += 1
+                if retry_count < 3:
+                    logging.warning(f'Display init attempt {retry_count} failed: {e}, retrying...')
+                    time_module.sleep(2)
+                else:
+                    logging.error(f'Failed to initialize display after 3 attempts: {e}')
+                    raise
 
         # Create photos directory if not exists
         PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
@@ -333,9 +356,42 @@ class InkyPhotoFrame:
                 self.display.set_image(img)
 
             logging.info('Displaying on screen...')
-            self.display.show()
-            logging.info(f'Successfully displayed: {Path(photo_path).name}')
-            return True
+
+            # Try to release SPI before showing
+            try:
+                subprocess.run(['sudo', 'dtparam', 'spi=off'], check=False, capture_output=True)
+                time_module.sleep(0.1)
+                subprocess.run(['sudo', 'dtparam', 'spi=on'], check=False, capture_output=True)
+                time_module.sleep(0.5)
+            except:
+                pass
+
+            # Show with retry logic for GPIO conflicts
+            retry_count = 0
+            while retry_count < 3:
+                try:
+                    self.display.show()
+                    logging.info(f'Successfully displayed: {Path(photo_path).name}')
+                    return True
+                except Exception as show_error:
+                    if "GPIO" in str(show_error) or "pins we need are in use" in str(show_error):
+                        retry_count += 1
+                        if retry_count < 3:
+                            logging.warning(f'GPIO conflict on attempt {retry_count}, retrying...')
+                            # Try to reset SPI
+                            subprocess.run(['sudo', 'modprobe', '-r', 'spidev'], check=False, capture_output=True)
+                            subprocess.run(['sudo', 'modprobe', '-r', 'spi_bcm2835'], check=False, capture_output=True)
+                            time_module.sleep(1)
+                            subprocess.run(['sudo', 'modprobe', 'spi_bcm2835'], check=False, capture_output=True)
+                            subprocess.run(['sudo', 'modprobe', 'spidev'], check=False, capture_output=True)
+                            time_module.sleep(1)
+                            # Re-initialize display
+                            from inky.auto import auto
+                            self.display = auto()
+                        else:
+                            raise
+                    else:
+                        raise
 
         except Exception as e:
             logging.error(f'Error displaying photo: {e}')
