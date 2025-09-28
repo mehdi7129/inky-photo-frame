@@ -68,6 +68,18 @@ fi
 sudo modprobe i2c-dev
 sudo modprobe spi-bcm2835
 
+# Fix GPIO conflict for Inky display
+print_info "Configuring GPIO for Inky display..."
+# Check if the dtoverlay line already exists
+if ! grep -q "dtoverlay=spi0-1cs,cs0_pin=7" /boot/config.txt; then
+    echo "dtoverlay=spi0-1cs,cs0_pin=7" | sudo tee -a /boot/config.txt > /dev/null
+    print_status "GPIO configuration added to /boot/config.txt"
+    print_info "⚠️  A reboot will be required after installation for GPIO changes to take effect"
+    REBOOT_REQUIRED=true
+else
+    print_status "GPIO configuration already present"
+fi
+
 # Update system
 print_info "Updating system packages..."
 sudo apt-get update
@@ -302,3 +314,17 @@ echo "📷 L'écran affiche actuellement un message de bienvenue"
 echo "   Ajoutez des photos pour commencer!"
 echo ""
 print_info "Consultez $INSTALL_DIR/README.md pour plus d'infos"
+
+# Check if reboot is required
+if [ "$REBOOT_REQUIRED" = true ]; then
+    echo ""
+    echo "╔════════════════════════════════════════════════════════╗"
+    echo "║     ⚠️  IMPORTANT: REBOOT REQUIRED                      ║"
+    echo "╚════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "GPIO configuration has been updated."
+    echo "Please reboot your Raspberry Pi for the changes to take effect:"
+    echo ""
+    echo "  sudo reboot"
+    echo ""
+fi
