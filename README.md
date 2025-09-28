@@ -129,9 +129,28 @@ graph LR
 - 👵 **Grandparents** - Simple to use, no tech knowledge needed
 - 🌱 **Eco-Friendly** - Ultra-low power consumption
 - 🎓 **Educational** - Learn about e-ink technology
+- ⛺ **Portable/Outdoor** - Works on battery for weeks!
 
-## 📊 Power Consumption Comparison
+## 🔋 Battery Life & Power Consumption
 
+### Power Usage Breakdown
+| Component | Consumption | Notes |
+|-----------|------------|-------|
+| **Raspberry Pi Zero 2W** | 0.5-0.75W | Idle with WiFi |
+| **E-ink Display Refresh** | 1W for 30s | Once per day |
+| **Average Total** | **0.6W** | 24/7 operation |
+
+### Estimated Battery Life
+| Battery Capacity | Estimated Runtime | Usage Pattern |
+|-----------------|-------------------|---------------|
+| **10,000 mAh** | **~3-4 days** | WiFi always on, 1 change/day |
+| **20,000 mAh** | **~7-8 days** | WiFi always on, 1 change/day |
+| **26,800 mAh** | **~10-12 days** | WiFi always on, 1 change/day |
+| **10,000 mAh** | **~30+ days** | WiFi off, pre-loaded photos |
+
+*Note: E-ink displays consume ZERO power between refreshes!*
+
+### Annual Cost Comparison
 | Device | Power Usage | Annual Cost |
 |--------|------------|-------------|
 | **Inky Photo Frame** | 0.6W | < 1€ |
