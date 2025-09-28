@@ -273,47 +273,55 @@ IP_ADDRESS=$(hostname -I | cut -d' ' -f1)
 cat > $INSTALL_DIR/README.md << EOF
 # Inky Photo Frame
 
-## 📱 Comment ajouter des photos depuis iPhone
+## 📱 How to Add Photos from Your Phone
 
-1. Ouvrez l'app **Files/Fichiers** sur votre iPhone
-2. Appuyez sur **Connect to Server** / **Se connecter au serveur**
-3. Entrez: \`smb://$IP_ADDRESS\`
-4. Utilisez ces identifiants:
-   - **Utilisateur:** $USER_NAME
-   - **Mot de passe:** $USER_PASSWORD
-5. Ouvrez le dossier **Images**
-6. Déposez vos photos (JPG, PNG, HEIC supportés)
+### iPhone/iPad
+1. Open the **Files** app
+2. Tap **Connect to Server**
+3. Enter: \`smb://$IP_ADDRESS\`
+4. Use these credentials:
+   - **Username:** $USER_NAME
+   - **Password:** $USER_PASSWORD
+5. Open the **Images** folder
+6. Upload your photos (JPG, PNG, HEIC supported)
 
-## ✨ Fonctionnalités
+### Android
+1. Use a file explorer app (CX File Explorer, Solid Explorer)
+2. Connect to: \`smb://$IP_ADDRESS\`
+3. Enter the same credentials as above
+4. Navigate to **Images** folder
+5. Upload your photos
 
-- **Affichage instantané** des nouvelles photos
-- **Rotation quotidienne** à 5h du matin
-- **Historique intelligent** - ne répète pas les photos
-- **Support HEIC** pour les photos iPhone
-- **Recadrage intelligent** pour l'écran e-ink
+## ✨ Features
 
-## 🛠 Commandes utiles
+- **Instant display** of new photos
+- **Daily rotation** at 5AM
+- **Smart history** - doesn't repeat recent photos
+- **HEIC support** for iPhone photos
+- **Smart cropping** for e-ink display
+
+## 🛠 Useful Commands
 
 \`\`\`bash
-# Voir le statut
+# Check service status
 sudo systemctl status inky-photo-frame
 
-# Voir les logs
+# View logs
 sudo journalctl -u inky-photo-frame -f
 
-# Redémarrer le service
+# Restart service
 sudo systemctl restart inky-photo-frame
 
-# Arrêter le service
+# Stop service
 sudo systemctl stop inky-photo-frame
 \`\`\`
 
-## 📁 Emplacements
+## 📁 File Locations
 
 - Photos: $PHOTOS_DIR
 - Application: $INSTALL_DIR
 - Logs: /home/pi/inky_photo_frame.log
-- Historique: /home/pi/.inky_history.json
+- History: /home/pi/.inky_history.json
 EOF
 
 # Final status check only if services were started
@@ -325,22 +333,26 @@ fi
 
 echo ""
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║     ✅ Installation terminée avec succès!              ║"
+echo "║     ✅ Installation completed successfully!            ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo ""
-echo "📱 CONNEXION DEPUIS VOTRE TÉLÉPHONE:"
-echo "   iPhone/iPad: Ouvrez Files/Fichiers"
-echo "   Android: Utilisez un explorateur de fichiers (CX File Explorer, Solid Explorer)"
+echo "📱 HOW TO CONNECT FROM YOUR PHONE:"
+echo "   iPhone/iPad: Open Files app"
+echo "   Android: Use a file explorer (CX File Explorer, Solid Explorer)"
 echo ""
-echo "   Pour tous:"
-echo "   2. Connectez-vous à: smb://$IP_ADDRESS"
-echo "   3. Utilisateur: $USER_NAME"
-echo "   4. Mot de passe: $USER_PASSWORD"
+echo "   For all devices:"
+echo "   1. Connect to: smb://$IP_ADDRESS"
+echo "   2. Username: $USER_NAME"
+echo "   3. Password: $USER_PASSWORD"
 echo ""
-echo "📷 L'écran affiche actuellement un message de bienvenue"
-echo "   Ajoutez des photos pour commencer!"
+if [ "$REBOOT_REQUIRED" = true ]; then
+    echo "📷 After reboot, the welcome screen will appear on your Inky display"
+else
+    echo "📷 The welcome screen is now displayed on your Inky display"
+fi
+echo "   Add photos to start your slideshow!"
 echo ""
-print_info "Consultez $INSTALL_DIR/README.md pour plus d'infos"
+print_info "See $INSTALL_DIR/README.md for more info"
 
 # Check if reboot is required
 if [ "$REBOOT_REQUIRED" = true ]; then
