@@ -121,7 +121,7 @@ class InkyPhotoFrame:
             return "192.168.1.xxx"
 
     def display_welcome(self):
-        """Display welcome screen with connection instructions in French"""
+        """Display welcome screen with connection instructions in English"""
         logging.info('Displaying welcome screen')
 
         # Create welcome image - pure white background
@@ -146,7 +146,7 @@ class InkyPhotoFrame:
 
         # Title
         y_pos = 30
-        title = "Cadre Photo Connecté"
+        title = "Digital Photo Frame"
         bbox = draw.textbbox((0, 0), title, font=title_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), title, font=title_font, fill='black')
@@ -157,7 +157,7 @@ class InkyPhotoFrame:
 
         # Connection section
         y_pos += 25
-        text = "Pour ajouter vos photos :"
+        text = "To add your photos:"
         bbox = draw.textbbox((0, 0), text, font=normal_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), text, font=normal_font, fill='black')
@@ -172,11 +172,11 @@ class InkyPhotoFrame:
         # Instructions
         y_pos += 70
         instructions = [
-            ("iPhone / iPad :", normal_font, 'black'),
-            ("Ouvrez Fichiers → Se connecter au serveur", small_font, 'darkgreen'),
+            ("iPhone / iPad:", normal_font, 'black'),
+            ("Files app → Connect to Server", small_font, 'darkgreen'),
             ("", None, None),
-            ("Android :", normal_font, 'black'),
-            ("CX File Explorer → Réseau → SMB", small_font, 'darkgreen'),
+            ("Android:", normal_font, 'black'),
+            ("File Explorer → Network → SMB", small_font, 'darkgreen'),
         ]
 
         for text, font, color in instructions:
@@ -193,13 +193,13 @@ class InkyPhotoFrame:
         draw.line([(150, y_pos), (650, y_pos)], fill='gray', width=1)
         y_pos += 15
 
-        cred_text = "Utilisateur : inky"
+        cred_text = "Username: inky"
         bbox = draw.textbbox((0, 0), cred_text, font=cred_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), cred_text, font=cred_font, fill='black')
 
         y_pos += 35
-        cred_text = "Mot de passe : inkyimpression73_2025"
+        cred_text = "Password: inkyimpression73_2025"
         bbox = draw.textbbox((0, 0), cred_text, font=cred_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), cred_text, font=cred_font, fill='black')
@@ -209,7 +209,7 @@ class InkyPhotoFrame:
 
         # Bottom message
         y_pos += 25
-        bottom_text = "Déposez vos photos dans le dossier InkyPhotos"
+        bottom_text = "Drop your photos in the InkyPhotos folder"
         bbox = draw.textbbox((0, 0), bottom_text, font=small_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), bottom_text, font=small_font, fill='purple')
