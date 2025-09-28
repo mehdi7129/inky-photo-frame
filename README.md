@@ -2,9 +2,9 @@
 
 <div align="center">
 
-## 🖼️ 800x480 • 7 Colors • E-Ink Display
+## 🖼️ Universal E-Ink Photo Frame • Auto-Detects Your Display
 
-**Transform your Inky Impression 7.3" into a stunning digital photo frame**
+**Transform your Inky Impression into a stunning digital photo frame**
 
 [![GitHub](https://img.shields.io/github/stars/mehdi7129/inky-photo-frame?style=social)](https://github.com/mehdi7129/inky-photo-frame)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -17,11 +17,23 @@
 
 ---
 
+## 🎯 Compatible Displays
+
+This project **automatically detects** and adapts to your Inky display:
+
+| Model | Resolution | Aspect Ratio | Colors | Status |
+|-------|------------|--------------|---------|---------|
+| **Inky Impression 7.3"** | 800×480 | 5:3 | 7 colors | ✅ Fully Supported |
+| **Inky Impression 7.3" (2025)** | 800×480 | 5:3 | 6 colors | ✅ Fully Supported |
+| **Inky Impression 13.3" (2025)** | 1600×1200 | 4:3 | 6 colors | ✅ Fully Supported |
+
+The software uses the official [Pimoroni Inky library](https://github.com/pimoroni/inky) with `inky.auto` for automatic display detection!
+
 ## ✨ What Makes It Special?
 
 ### 🎨 **Beautiful E-Ink Display**
-- **800x480 pixels** - Crystal clear
-- **7 colors** - Vibrant Spectra display
+- **Auto-adapts** to your display resolution
+- **Multi-color** support (6-7 colors depending on model)
 - **No backlight** - Easy on the eyes
 - **Persistent** - Image stays without power
 
@@ -101,7 +113,10 @@ graph LR
 
 ## 📦 What You Need
 
-- **🖼️ Inky Impression 7.3"** - [Buy from Pimoroni](https://shop.pimoroni.com/products/inky-impression-7-3)
+- **🖼️ Inky Impression Display** - Any model:
+  - [Inky Impression 7.3"](https://shop.pimoroni.com/products/inky-impression-7-3)
+  - [Inky Impression 7.3" (2025 Edition)](https://shop.pimoroni.com/products/inky-impression-7-3-2025)
+  - [Inky Impression 13.3" (2025 Edition)](https://shop.pimoroni.com/products/inky-impression-13-3-2025)
 - **🥧 Raspberry Pi** - Zero 2W, 3, 4, or 5
 - **🔌 Power Supply** - 5V USB power
 - **💾 SD Card** - 8GB+ recommended

@@ -7,7 +7,7 @@ set -e  # Exit on error
 
 echo "╔════════════════════════════════════════════════════════╗"
 echo "║     📷 Inky Photo Frame - Installation                 ║"
-echo "║     Pour Inky Impression 7.3\" (800x480)               ║"
+echo "║     Universal - All Inky Impression Models             ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo ""
 echo "⚠️  IMPORTANT: This script will enable I2C and SPI interfaces"
