@@ -216,7 +216,7 @@ class InkyPhotoFrame:
 
         # Display the welcome screen
         try:
-            self.display.set_image(img, saturation=0.5)
+            self.display.set_image(img, saturation=0.6)
         except TypeError:
             self.display.set_image(img)
         self.display.show()
@@ -328,7 +328,7 @@ class InkyPhotoFrame:
 
             # Set image with saturation for color display
             try:
-                self.display.set_image(img, saturation=0.5)
+                self.display.set_image(img, saturation=0.6)
             except TypeError:
                 self.display.set_image(img)
 

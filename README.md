@@ -126,11 +126,28 @@ graph LR
 
 ## 🛠️ Advanced Configuration
 
+### Change Photo Rotation Time
 Edit `/home/pi/inky-photo-frame/inky_photo_frame.py`:
 
 ```python
 CHANGE_HOUR = 5  # Change daily at this hour (24h format)
 PHOTOS_DIR = Path('/home/pi/InkyPhotos')  # Photo storage location
+```
+
+### Adjust Color Saturation
+Adjust the color intensity of your display (0.0 = B&W, 1.0 = maximum colors):
+
+```bash
+# Set saturation to 0.8 for more vibrant colors
+ssh pi@[your-pi-ip] "sed -i 's/saturation=0.6/saturation=0.8/g' /home/pi/inky-photo-frame/inky_photo_frame.py && sudo systemctl restart inky-photo-frame"
+
+# Or set to any value between 0.0 and 1.0
+# Default: 0.6 (balanced colors)
+# Recommended values:
+# - 0.4: Subtle, pastel colors
+# - 0.6: Balanced (default)
+# - 0.8: Vibrant colors
+# - 1.0: Maximum saturation
 ```
 
 ## ⚠️ Troubleshooting
