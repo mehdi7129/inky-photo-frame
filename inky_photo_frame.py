@@ -121,62 +121,44 @@ class InkyPhotoFrame:
             return "192.168.1.xxx"
 
     def display_welcome(self):
-        """Display welcome screen with connection instructions"""
+        """Display welcome screen with IP address only"""
         logging.info('Displaying welcome screen')
 
-        # Create welcome image
+        # Create welcome image - pure white background
         img = Image.new('RGB', (self.width, self.height), color='white')
         draw = ImageDraw.Draw(img)
 
-        # Try to use nice fonts
+        # Try to use large bold font
         try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42)
-            normal_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
-            small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
-            mono_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 22)
+            # Use the largest font size for maximum readability
+            ip_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
+            status_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
         except:
-            title_font = ImageFont.load_default()
-            normal_font = title_font
-            small_font = title_font
-            mono_font = title_font
+            ip_font = ImageFont.load_default()
+            status_font = ip_font
 
         ip_address = self.get_ip_address()
 
-        # Title
-        y_pos = 40
-        title = "📷 Inky Photo Frame"
-        bbox = draw.textbbox((0, 0), title, font=title_font)
+        # Display IP address in the center - large and bold
+        ip_text = ip_address
+        bbox = draw.textbbox((0, 0), ip_text, font=ip_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
-        draw.text((x, y_pos), title, font=title_font, fill='black')
+        y = (self.height - (bbox[3] - bbox[1])) // 2 - 50
+        draw.text((x, y), ip_text, font=ip_font, fill='black')
 
-        # Instructions
-        y_pos += 80
-        instructions = [
-            ("Pour ajouter des photos:", normal_font, 'black'),
-            ("", None, None),
-            ("1. Sur votre téléphone, ouvrez l'app fichiers", small_font, 'darkblue'),
-            (f"2. Connectez-vous à: smb://{ip_address}", small_font, 'darkblue'),
-            ("", None, None),
-            ("Identifiants de connexion:", normal_font, 'black'),
-            ("━━━━━━━━━━━━━━━━━━━━━━━━━━", small_font, 'gray'),
-            ("Utilisateur: inky", mono_font, 'darkgreen'),
-            ("Mot de passe: inkyimpression73_2025", mono_font, 'darkgreen'),
-            ("━━━━━━━━━━━━━━━━━━━━━━━━━━", small_font, 'gray'),
-            ("", None, None),
-            ("3. Déposez vos photos dans InkyPhotos", small_font, 'darkblue'),
-            ("", None, None),
-            ("✨ Les photos s'affichent instantanément!", small_font, 'purple'),
-            ("⏰ Rotation quotidienne à 5h du matin", small_font, 'purple'),
-        ]
+        # Add status message below
+        status_text = "Connected to Internet"
+        bbox = draw.textbbox((0, 0), status_text, font=status_font)
+        x = (self.width - (bbox[2] - bbox[0])) // 2
+        y = y + 100
+        draw.text((x, y), status_text, font=status_font, fill='black')
 
-        for text, font, color in instructions:
-            if font:
-                bbox = draw.textbbox((0, 0), text, font=font)
-                x = (self.width - (bbox[2] - bbox[0])) // 2
-                draw.text((x, y_pos), text, font=font, fill=color)
-                y_pos += 30 if font == small_font else 35
-            else:
-                y_pos += 15
+        # Add second line
+        status_text2 = "Installation almost complete"
+        bbox = draw.textbbox((0, 0), status_text2, font=status_font)
+        x = (self.width - (bbox[2] - bbox[0])) // 2
+        y = y + 50
+        draw.text((x, y), status_text2, font=status_font, fill='black')
 
         # Display the welcome screen
         try:
