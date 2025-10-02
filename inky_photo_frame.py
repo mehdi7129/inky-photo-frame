@@ -34,15 +34,11 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.1.5"
+VERSION = "2.2.0"
 
 # Color calibration settings for e-ink display
-# Note: SATURATION is now auto-detected per display model (see detect_display_saturation)
-# Based on user-calibrated Spectra 6 real RGB values:
-#   Red=#a02020, Yellow=#f0e050, Green=#608050, Blue=#5080b8 (very muted vs standard RGB)
-# - Spectra 2025 (6 colors): 0.3 (very low - Spectra has muted palette)
-# - Classic 7.3" (7 colors): 0.6 (standard)
-# - Unknown displays: 0.5 (safe default)
+# Using Pimoroni's official recommended settings
+SATURATION = 0.5  # Pimoroni default for all displays
 AUTO_CONTRAST = True  # Enable/disable auto-contrast enhancement
 CONTRAST_CUTOFF = 2  # Auto-contrast cutoff (0-5, lower = less aggressive)
 
@@ -250,27 +246,19 @@ class InkyPhotoFrame:
 
         # Check display type from class name or resolution
         if 'e673' in str(type(self.display).__module__).lower() or 'E673' in display_class:
-            # Inky Impression 7.3" Spectra 2025 (6 colors) - needs MUCH LOWER saturation
-            # Spectra real colors: Red=#a02020, Yellow=#f0e050, Green=#608050, Blue=#5080b8
-            # These are very different from pure RGB, so low saturation is key
             logging.info('📺 Detected: Inky Impression 7.3" Spectra 2025 (6 colors)')
-            self.is_spectra = True
-            return 0.3  # Very low saturation to work with Spectra's muted palette
+            self.is_spectra = False  # No special handling
         elif self.width == 800 and self.height == 480:
-            # Inky Impression 7.3" Classic (7 colors) - can handle more saturation
             logging.info('📺 Detected: Inky Impression 7.3" Classic (7 colors)')
             self.is_spectra = False
-            return 0.6  # Standard saturation
         elif self.width == 1600 and self.height == 1200:
-            # Inky Impression 13.3" 2025 (6 colors) - needs lower saturation + color correction
             logging.info('📺 Detected: Inky Impression 13.3" 2025 (6 colors)')
-            self.is_spectra = True
-            return 0.4  # Lower saturation like Spectra
+            self.is_spectra = False  # No special handling
         else:
-            # Unknown display - use conservative default
-            logging.info(f'📺 Unknown display: {self.width}x{self.height}, using default saturation')
+            logging.info(f'📺 Unknown display: {self.width}x{self.height}')
             self.is_spectra = False
-            return 0.5  # Safe middle ground
+
+        return SATURATION  # Pimoroni default (0.5) for all displays
 
     def get_ip_address(self):
         """Get the local IP address"""
@@ -535,35 +523,8 @@ class InkyPhotoFrame:
         # Resize to display size
         img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
 
-        # Spectra 2025 specific color correction
-        if self.is_spectra:
-            from PIL import ImageEnhance
-
-            # Spectra 6 has a very limited, muted color palette:
-            # Real colors: Red=#a02020, Yellow=#f0e050, Green=#608050, Blue=#5080b8
-            # Problem: Spectra renders too cold/blue, lacks warmth
-            # Solution: Reduce blue channel, boost red slightly for warmth
-
-            # Step 1: Increase brightness (Spectra renders dark)
-            brightness = ImageEnhance.Brightness(img)
-            img = brightness.enhance(1.12)  # +12% brightness
-
-            # Step 2: Channel balancing - aggressive warmth boost
-            r, g, b = img.split()
-            r_enhancer = ImageEnhance.Brightness(r)
-            r = r_enhancer.enhance(1.15)  # +15% red for strong warmth (was 1.05)
-            g_enhancer = ImageEnhance.Brightness(g)
-            g = g_enhancer.enhance(0.92)  # -8% green (reduces yellow, was -5%)
-            b_enhancer = ImageEnhance.Brightness(b)
-            b = b_enhancer.enhance(0.75)  # -25% blue (aggressive reduction, was -15%)
-            img = Image.merge('RGB', (r, g, b))
-
-            # Step 3: NO contrast enhancement (preserve natural tones)
-            # Spectra's limited palette means contrast makes colors worse
-
-            logging.info('Applied Spectra calibration (saturation 0.3 + warmth boost + blue reduction)')
-        else:
-            # Classic displays: standard contrast enhancement
+        # Apply standard auto-contrast (Pimoroni recommended)
+        if AUTO_CONTRAST:
             img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
 
         return img
