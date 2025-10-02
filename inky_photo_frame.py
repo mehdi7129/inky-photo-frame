@@ -34,7 +34,7 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.1.1"
+VERSION = "2.1.2"
 
 # Color calibration settings for e-ink display
 # Note: SATURATION is now auto-detected per display model (see detect_display_saturation)
@@ -531,29 +531,29 @@ class InkyPhotoFrame:
         # Resize to display size
         img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
 
-        # Spectra 2025 specific color correction (reduce yellow/orange tint)
+        # Spectra 2025 specific color correction
         if self.is_spectra:
             from PIL import ImageEnhance
-            # Convert to HSV-like adjustment to reduce yellow/orange dominance
-            # Split RGB channels
-            r, g, b = img.split()
 
-            # Reduce red channel slightly (yellows = red + green)
+            # Step 1: Reduce yellow/orange tint via channel adjustment
+            r, g, b = img.split()
             r_enhancer = ImageEnhance.Brightness(r)
             r = r_enhancer.enhance(0.92)  # Reduce red by 8%
-
-            # Reduce green channel slightly (yellows = red + green)
             g_enhancer = ImageEnhance.Brightness(g)
             g = g_enhancer.enhance(0.90)  # Reduce green by 10%
-
-            # Keep blue as-is (blues are fine)
-
-            # Merge back
             img = Image.merge('RGB', (r, g, b))
-            logging.info('Applied Spectra color correction (reduced yellow/orange)')
 
-        # Enhance contrast for e-ink
-        img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
+            # Step 2: Increase overall brightness slightly (compensate for dark rendering)
+            brightness = ImageEnhance.Brightness(img)
+            img = brightness.enhance(1.08)  # +8% brightness
+
+            # Step 3: Gentle contrast (Spectra already has punchy colors)
+            img = ImageOps.autocontrast(img, cutoff=0)  # Minimal contrast stretch
+
+            logging.info('Applied Spectra color correction (yellow reduction + brightness + gentle contrast)')
+        else:
+            # Classic displays: standard contrast enhancement
+            img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
 
         return img
 
