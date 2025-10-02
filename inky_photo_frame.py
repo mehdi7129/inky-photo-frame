@@ -238,98 +238,74 @@ class InkyPhotoFrame:
             return "192.168.1.xxx"
 
     def display_welcome(self):
-        """Display welcome screen with connection instructions in English"""
+        """Display welcome screen with connection instructions - LARGE readable text"""
         logging.info('Displaying welcome screen')
 
         # Create welcome image - pure white background
         img = Image.new('RGB', (self.width, self.height), color='white')
         draw = ImageDraw.Draw(img)
 
-        # Try to use nice fonts with different sizes
+        # Large, readable fonts for e-ink display
         try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
-            ip_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 56)
-            normal_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
-            small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
-            cred_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 26)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
+            ip_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 72)
+            info_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
+            cred_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 40)
         except:
             title_font = ImageFont.load_default()
             ip_font = title_font
-            normal_font = title_font
-            small_font = title_font
+            info_font = title_font
             cred_font = title_font
 
         ip_address = self.get_ip_address()
 
         # Title
-        y_pos = 30
-        title = "Digital Photo Frame"
+        y_pos = 20
+        title = "📷 Photo Frame"
         bbox = draw.textbbox((0, 0), title, font=title_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), title, font=title_font, fill='black')
 
-        # Separator line
-        y_pos += 60
-        draw.line([(100, y_pos), (700, y_pos)], fill='black', width=2)
+        # Separator
+        y_pos += 75
+        draw.line([(80, y_pos), (720, y_pos)], fill='black', width=3)
 
-        # Connection section
-        y_pos += 25
-        text = "To add your photos:"
-        bbox = draw.textbbox((0, 0), text, font=normal_font)
-        x = (self.width - (bbox[2] - bbox[0])) // 2
-        draw.text((x, y_pos), text, font=normal_font, fill='black')
-
-        # IP Address - prominent
-        y_pos += 45
+        # IP Address - LARGE and prominent
+        y_pos += 20
         ip_text = f"smb://{ip_address}"
         bbox = draw.textbbox((0, 0), ip_text, font=ip_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), ip_text, font=ip_font, fill='darkblue')
 
-        # Instructions
-        y_pos += 70
-        instructions = [
-            ("iPhone / iPad:", normal_font, 'black'),
-            ("Files app → Connect to Server", small_font, 'darkgreen'),
-            ("", None, None),
-            ("Android:", normal_font, 'black'),
-            ("File Explorer → Network → SMB", small_font, 'darkgreen'),
-        ]
-
-        for text, font, color in instructions:
-            if font:
-                bbox = draw.textbbox((0, 0), text, font=font)
-                x = (self.width - (bbox[2] - bbox[0])) // 2
-                draw.text((x, y_pos), text, font=font, fill=color)
-                y_pos += 30 if font == small_font else 35
-            else:
-                y_pos += 10
-
-        # Credentials box
-        y_pos += 10
-        draw.line([(150, y_pos), (650, y_pos)], fill='gray', width=1)
-        y_pos += 15
-
+        # Credentials - LARGE
+        y_pos += 95
         cred_text = "Username: inky"
         bbox = draw.textbbox((0, 0), cred_text, font=cred_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), cred_text, font=cred_font, fill='black')
 
-        y_pos += 35
+        y_pos += 55
         cred_text = "Password: inkyimpression73_2025"
         bbox = draw.textbbox((0, 0), cred_text, font=cred_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), cred_text, font=cred_font, fill='black')
 
-        y_pos += 20
-        draw.line([(150, y_pos), (650, y_pos)], fill='gray', width=1)
+        # Separator
+        y_pos += 60
+        draw.line([(80, y_pos), (720, y_pos)], fill='gray', width=2)
 
-        # Bottom message
-        y_pos += 25
-        bottom_text = "Drop your photos in the Images folder"
-        bbox = draw.textbbox((0, 0), bottom_text, font=small_font)
+        # Instructions - simplified
+        y_pos += 20
+        text1 = "iPhone: Files app"
+        bbox = draw.textbbox((0, 0), text1, font=info_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
-        draw.text((x, y_pos), bottom_text, font=small_font, fill='purple')
+        draw.text((x, y_pos), text1, font=info_font, fill='darkgreen')
+
+        y_pos += 50
+        text2 = "Android: File Explorer"
+        bbox = draw.textbbox((0, 0), text2, font=info_font)
+        x = (self.width - (bbox[2] - bbox[0])) // 2
+        draw.text((x, y_pos), text2, font=info_font, fill='darkgreen')
 
         # Display the welcome screen
         try:
