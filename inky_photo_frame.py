@@ -34,7 +34,7 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.1.0"
+VERSION = "2.1.1"
 
 # Color calibration settings for e-ink display
 # Note: SATURATION is now auto-detected per display model (see detect_display_saturation)
@@ -242,25 +242,30 @@ class InkyPhotoFrame:
         """
         Auto-detect display model and return optimal saturation
         Different Inky models have different color palettes and need different saturations
+        Returns: (saturation, is_spectra)
         """
         display_class = type(self.display).__name__
 
         # Check display type from class name or resolution
         if 'e673' in str(type(self.display).__module__).lower() or 'E673' in display_class:
-            # Inky Impression 7.3" Spectra 2025 (6 colors) - needs LOWER saturation
+            # Inky Impression 7.3" Spectra 2025 (6 colors) - needs LOWER saturation + color correction
             logging.info('📺 Detected: Inky Impression 7.3" Spectra 2025 (6 colors)')
+            self.is_spectra = True
             return 0.4  # Lower saturation to avoid over-saturated colors
         elif self.width == 800 and self.height == 480:
             # Inky Impression 7.3" Classic (7 colors) - can handle more saturation
             logging.info('📺 Detected: Inky Impression 7.3" Classic (7 colors)')
+            self.is_spectra = False
             return 0.6  # Standard saturation
         elif self.width == 1600 and self.height == 1200:
-            # Inky Impression 13.3" 2025 (6 colors) - needs lower saturation
+            # Inky Impression 13.3" 2025 (6 colors) - needs lower saturation + color correction
             logging.info('📺 Detected: Inky Impression 13.3" 2025 (6 colors)')
+            self.is_spectra = True
             return 0.4  # Lower saturation like Spectra
         else:
             # Unknown display - use conservative default
             logging.info(f'📺 Unknown display: {self.width}x{self.height}, using default saturation')
+            self.is_spectra = False
             return 0.5  # Safe middle ground
 
     def get_ip_address(self):
@@ -526,7 +531,28 @@ class InkyPhotoFrame:
         # Resize to display size
         img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
 
-        # Enhance contrast for e-ink (original behavior)
+        # Spectra 2025 specific color correction (reduce yellow/orange tint)
+        if self.is_spectra:
+            from PIL import ImageEnhance
+            # Convert to HSV-like adjustment to reduce yellow/orange dominance
+            # Split RGB channels
+            r, g, b = img.split()
+
+            # Reduce red channel slightly (yellows = red + green)
+            r_enhancer = ImageEnhance.Brightness(r)
+            r = r_enhancer.enhance(0.92)  # Reduce red by 8%
+
+            # Reduce green channel slightly (yellows = red + green)
+            g_enhancer = ImageEnhance.Brightness(g)
+            g = g_enhancer.enhance(0.90)  # Reduce green by 10%
+
+            # Keep blue as-is (blues are fine)
+
+            # Merge back
+            img = Image.merge('RGB', (r, g, b))
+            logging.info('Applied Spectra color correction (reduced yellow/orange)')
+
+        # Enhance contrast for e-ink
         img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
 
         return img
