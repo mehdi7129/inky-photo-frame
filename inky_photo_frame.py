@@ -37,10 +37,10 @@ MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
 VERSION = "2.0.1"
 
 # Color calibration settings for e-ink display
-SATURATION = 0.5  # Color saturation (0.0 = B&W, 1.0 = full color) - Lower to reduce yellow/green tint
-AUTO_CONTRAST = True  # Enable/disable auto-contrast enhancement
-CONTRAST_CUTOFF = 1  # Auto-contrast cutoff (0-5, lower = less aggressive) - Reduced to preserve colors
-COLOR_TEMPERATURE = 0  # Color temperature adjustment (-50 to +50, negative = cooler/less yellow)
+SATURATION = 0.4  # Color saturation (0.0 = B&W, 1.0 = full color) - Lower to reduce yellow/green tint
+AUTO_CONTRAST = False  # Enable/disable auto-contrast enhancement - DISABLED to preserve original colors
+CONTRAST_CUTOFF = 1  # Auto-contrast cutoff (0-5, lower = less aggressive) - Only used if AUTO_CONTRAST=True
+COLOR_BALANCE_BLUE = 1.1  # Blue channel multiplier (>1.0 = more blue, reduces yellow) - Try 1.05-1.2
 
 # Setup logging
 logging.basicConfig(
@@ -467,18 +467,15 @@ class InkyPhotoFrame:
         img = Image.open(image_path)
 
         # Convert color profile to sRGB if needed (fixes P3/iPhone color shift)
-        if hasattr(img, 'info') and 'icc_profile' in img.info:
-            try:
-                from PIL import ImageCms
-                # Convert to sRGB color space to prevent color shifts
-                img = ImageCms.profileToProfile(img,
-                    ImageCms.ImageCmsProfile(img.info['icc_profile']),
-                    ImageCms.createProfile('sRGB'),
-                    renderingIntent=0,  # Perceptual
-                    outputMode='RGB')
-                logging.info('Converted color profile to sRGB')
-            except Exception as e:
-                logging.debug(f'Color profile conversion skipped: {e}')
+        # This is a lightweight approach that doesn't require ICC profile conversion
+        try:
+            # Simply strip the ICC profile and force RGB mode
+            # This prevents P3 color space from affecting rendering
+            if hasattr(img, 'info') and 'icc_profile' in img.info:
+                del img.info['icc_profile']
+                logging.info('Stripped color profile (forces sRGB interpretation)')
+        except Exception as e:
+            logging.debug(f'Profile stripping skipped: {e}')
 
         # Convert to RGB
         if img.mode != 'RGB':
@@ -507,24 +504,22 @@ class InkyPhotoFrame:
         # Resize to display size
         img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
 
-        # Color temperature adjustment (reduce yellow/green tint if needed)
-        if COLOR_TEMPERATURE != 0:
-            # Fast color adjustment using numpy if available, otherwise skip
-            try:
-                import numpy as np
-                img_array = np.array(img)
-                # Negative = cooler (more blue, less yellow/green)
-                # Positive = warmer (more yellow)
-                adjustment = -COLOR_TEMPERATURE / 100.0
-                img_array[:, :, 2] = np.clip(img_array[:, :, 2] + adjustment * 30, 0, 255)  # Blue channel
-                img = Image.fromarray(img_array.astype('uint8'))
-                logging.info(f'Applied color temperature: {COLOR_TEMPERATURE}')
-            except ImportError:
-                logging.debug('Numpy not available, skipping color temperature adjustment')
+        # Color balance adjustment (reduce yellow/green tint)
+        if COLOR_BALANCE_BLUE != 1.0:
+            from PIL import ImageEnhance
+            # Split into R, G, B channels
+            r, g, b = img.split()
+            # Enhance blue channel to compensate for yellow tint
+            enhancer = ImageEnhance.Brightness(b)
+            b = enhancer.enhance(COLOR_BALANCE_BLUE)
+            # Merge back
+            img = Image.merge('RGB', (r, g, b))
+            logging.info(f'Applied blue balance: {COLOR_BALANCE_BLUE}')
 
         # Optional auto-contrast enhancement (can affect colors)
         if AUTO_CONTRAST:
             img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
+            logging.info(f'Applied auto-contrast (cutoff={CONTRAST_CUTOFF})')
 
         return img
 
