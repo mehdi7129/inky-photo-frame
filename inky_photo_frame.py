@@ -34,11 +34,13 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.1.2"
+VERSION = "2.1.3"
 
 # Color calibration settings for e-ink display
 # Note: SATURATION is now auto-detected per display model (see detect_display_saturation)
-# - Spectra 2025 (6 colors): 0.4 (prevents over-saturation)
+# Based on user-calibrated Spectra 6 real RGB values:
+#   Red=#a02020, Yellow=#f0e050, Green=#608050, Blue=#5080b8 (very muted vs standard RGB)
+# - Spectra 2025 (6 colors): 0.3 (very low - Spectra has muted palette)
 # - Classic 7.3" (7 colors): 0.6 (standard)
 # - Unknown displays: 0.5 (safe default)
 AUTO_CONTRAST = True  # Enable/disable auto-contrast enhancement
@@ -248,10 +250,12 @@ class InkyPhotoFrame:
 
         # Check display type from class name or resolution
         if 'e673' in str(type(self.display).__module__).lower() or 'E673' in display_class:
-            # Inky Impression 7.3" Spectra 2025 (6 colors) - needs LOWER saturation + color correction
+            # Inky Impression 7.3" Spectra 2025 (6 colors) - needs MUCH LOWER saturation
+            # Spectra real colors: Red=#a02020, Yellow=#f0e050, Green=#608050, Blue=#5080b8
+            # These are very different from pure RGB, so low saturation is key
             logging.info('📺 Detected: Inky Impression 7.3" Spectra 2025 (6 colors)')
             self.is_spectra = True
-            return 0.4  # Lower saturation to avoid over-saturated colors
+            return 0.3  # Very low saturation to work with Spectra's muted palette
         elif self.width == 800 and self.height == 480:
             # Inky Impression 7.3" Classic (7 colors) - can handle more saturation
             logging.info('📺 Detected: Inky Impression 7.3" Classic (7 colors)')
@@ -535,22 +539,27 @@ class InkyPhotoFrame:
         if self.is_spectra:
             from PIL import ImageEnhance
 
-            # Step 1: Reduce yellow/orange tint via channel adjustment
+            # Spectra 6 has a very limited, muted color palette:
+            # Real colors: Red=#a02020, Yellow=#f0e050, Green=#608050, Blue=#5080b8
+            # Strategy: Desaturate heavily, increase brightness, minimal contrast
+
+            # Step 1: Increase brightness (Spectra renders dark)
+            brightness = ImageEnhance.Brightness(img)
+            img = brightness.enhance(1.15)  # +15% brightness (was 1.08)
+
+            # Step 2: Slightly reduce color intensity in problem areas
             r, g, b = img.split()
+            # Reduce red/green less aggressively (was 0.92/0.90)
             r_enhancer = ImageEnhance.Brightness(r)
-            r = r_enhancer.enhance(0.92)  # Reduce red by 8%
+            r = r_enhancer.enhance(0.95)  # Minimal red reduction
             g_enhancer = ImageEnhance.Brightness(g)
-            g = g_enhancer.enhance(0.90)  # Reduce green by 10%
+            g = g_enhancer.enhance(0.93)  # Small green reduction
             img = Image.merge('RGB', (r, g, b))
 
-            # Step 2: Increase overall brightness slightly (compensate for dark rendering)
-            brightness = ImageEnhance.Brightness(img)
-            img = brightness.enhance(1.08)  # +8% brightness
+            # Step 3: NO contrast enhancement (preserve natural tones)
+            # Spectra's limited palette means contrast makes colors worse
 
-            # Step 3: Gentle contrast (Spectra already has punchy colors)
-            img = ImageOps.autocontrast(img, cutoff=0)  # Minimal contrast stretch
-
-            logging.info('Applied Spectra color correction (yellow reduction + brightness + gentle contrast)')
+            logging.info('Applied Spectra calibration (low saturation 0.3 + brightness + no contrast)')
         else:
             # Classic displays: standard contrast enhancement
             img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
