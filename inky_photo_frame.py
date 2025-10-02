@@ -3,6 +3,8 @@
 Inky Photo Frame - Digital photo frame for Inky Impression 7.3"
 Displays photos from SMB share with immediate display of new photos
 Changes daily at 5AM with intelligent rotation
+
+Version: 2.0.0
 """
 
 import os
@@ -10,7 +12,7 @@ import os
 os.environ['INKY_SKIP_GPIO_CHECK'] = '1'
 import json
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 import time as time_module
@@ -22,12 +24,17 @@ import threading
 from threading import Timer
 import socket
 import subprocess
+import atexit
+import signal
+from functools import wraps
 
 # Configuration
 PHOTOS_DIR = Path('/home/pi/Images')
 HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
+MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
+VERSION = "2.0.0"
 
 # Setup logging
 logging.basicConfig(
@@ -38,6 +45,103 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
+
+# ============================================================================
+# DISPLAY MANAGER - Singleton pattern for robust GPIO/SPI management
+# ============================================================================
+
+class DisplayManager:
+    """
+    Singleton to manage Inky display with robust GPIO/SPI handling.
+    Initializes once, cleans up only on exit.
+    """
+    _instance = None
+    _display = None
+    _initialized = False
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def initialize(self):
+        """Initialize display once at startup"""
+        with self._lock:
+            if self._initialized:
+                return self._display
+
+            logging.info(f'🚀 Inky Photo Frame v{VERSION}')
+            logging.info('Initializing display...')
+
+            try:
+                from inky.auto import auto
+                self._display = auto()
+                self._initialized = True
+
+                width, height = self._display.resolution
+                logging.info(f'✅ Display initialized: {width}x{height}')
+
+                # Register cleanup handlers
+                atexit.register(self.cleanup)
+                signal.signal(signal.SIGTERM, lambda s, f: self.cleanup())
+                signal.signal(signal.SIGINT, lambda s, f: self.cleanup())
+
+                return self._display
+
+            except Exception as e:
+                logging.error(f'❌ Failed to initialize display: {e}')
+                raise
+
+    def get_display(self):
+        """Get the display instance (initializes if needed)"""
+        if not self._initialized:
+            return self.initialize()
+        return self._display
+
+    def cleanup(self):
+        """Cleanup display resources on exit"""
+        with self._lock:
+            if self._initialized and self._display:
+                try:
+                    if hasattr(self._display, '_spi'):
+                        self._display._spi.close()
+                    logging.info('🧹 Display cleaned up properly')
+                except Exception as e:
+                    logging.warning(f'Cleanup warning: {e}')
+                finally:
+                    self._initialized = False
+                    self._display = None
+
+def retry_on_error(max_attempts=3, delay=1, backoff=2):
+    """
+    Decorator to retry operations on GPIO/SPI errors
+    Uses exponential backoff for resilience
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    error_msg = str(e).lower()
+                    # Check if it's a recoverable error
+                    is_recoverable = any(x in error_msg for x in [
+                        'gpio', 'spi', 'pins', 'transport', 'endpoint', 'busy'
+                    ])
+
+                    if is_recoverable and attempt < max_attempts:
+                        wait_time = delay * (backoff ** (attempt - 1))
+                        logging.warning(f'⚠️ Attempt {attempt}/{max_attempts} failed: {e}')
+                        logging.info(f'Retrying in {wait_time}s...')
+                        time_module.sleep(wait_time)
+                    else:
+                        logging.error(f'❌ Operation failed after {attempt} attempts: {e}')
+                        raise
+            return None
+        return wrapper
+    return decorator
 
 class PhotoHandler(FileSystemEventHandler):
     """Handler for new photo files"""
@@ -97,40 +201,18 @@ class PhotoHandler(FileSystemEventHandler):
 
 class InkyPhotoFrame:
     def __init__(self):
-        # Fix GPIO conflict - comprehensive approach
-        self.fix_gpio_conflict()
+        # Use DisplayManager singleton for robust GPIO/SPI handling
+        self.display_manager = DisplayManager()
+        self.display = self.display_manager.initialize()
+        self.width, self.height = self.display.resolution
 
-        # Initialize display with retry logic
-        retry_count = 0
-        while retry_count < 3:
-            try:
-                from inky.auto import auto
-                self.display = auto()
-                self.width, self.height = self.display.resolution
-                logging.info(f'Display initialized: {self.width}x{self.height}')
-                break
-            except Exception as e:
-                retry_count += 1
-                if retry_count < 3:
-                    logging.warning(f'Display init attempt {retry_count} failed: {e}, retrying...')
-                    # Try fixing GPIO again before retry
-                    self.fix_gpio_conflict()
-                    time_module.sleep(2)
-                else:
-                    logging.error(f'Failed to initialize display after 3 attempts: {e}')
-                    # Last attempt - try with manual SPI reset
-                    try:
-                        logging.info('Attempting manual SPI reset...')
-                        subprocess.run(['sudo', 'modprobe', '-r', 'spi_bcm2835'], check=False, capture_output=True)
-                        time_module.sleep(1)
-                        subprocess.run(['sudo', 'modprobe', 'spi_bcm2835'], check=False, capture_output=True)
-                        time_module.sleep(1)
-                        from inky.auto import auto
-                        self.display = auto()
-                        self.width, self.height = self.display.resolution
-                        logging.info(f'Display initialized after SPI reset: {self.width}x{self.height}')
-                    except:
-                        raise
+        # Register HEIF support if available
+        try:
+            import pillow_heif
+            pillow_heif.register_heif_opener()
+            logging.info('📱 HEIF support enabled for iPhone photos')
+        except ImportError:
+            logging.info('📱 HEIF support not available')
 
         # Create photos directory if not exists
         PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
@@ -141,29 +223,8 @@ class InkyPhotoFrame:
         # Threading lock for safe history updates
         self.lock = threading.Lock()
 
-    def fix_gpio_conflict(self):
-        """Comprehensive GPIO conflict resolution"""
-        try:
-            # Method 1: Try to release any existing SPI claims
-            subprocess.run(['sudo', 'dtoverlay', '-r', 'spi0-1cs'], check=False, capture_output=True)
-            time_module.sleep(0.2)
-
-            # Method 2: Reset SPI parameters
-            subprocess.run(['sudo', 'dtparam', 'spi=off'], check=False, capture_output=True)
-            time_module.sleep(0.2)
-            subprocess.run(['sudo', 'dtparam', 'spi=on'], check=False, capture_output=True)
-            time_module.sleep(0.2)
-        except Exception as e:
-            logging.debug(f'GPIO conflict fix attempt: {e}')
-            pass
-
-        # Register HEIF support if available
-        try:
-            import pillow_heif
-            pillow_heif.register_heif_opener()
-            logging.info('HEIF support enabled for iPhone/modern phone photos')
-        except ImportError:
-            logging.info('HEIF support not available')
+        # Storage management - cleanup old photos periodically
+        self.last_cleanup = datetime.now()
 
     def get_ip_address(self):
         """Get the local IP address"""
@@ -282,10 +343,22 @@ class InkyPhotoFrame:
         if HISTORY_FILE.exists():
             with open(HISTORY_FILE, 'r') as f:
                 data = json.load(f)
-                logging.info(f'Loaded history: {len(data["shown"])} shown, {len(data["pending"])} pending')
+
+                # Migrate old format to new format with metadata
+                if 'photo_metadata' not in data:
+                    data['photo_metadata'] = {}
+                    logging.info('Migrated history to new format with metadata')
+
+                logging.info(f'📚 Loaded history: {len(data["shown"])} shown, {len(data["pending"])} pending')
                 return data
         else:
-            return {'shown': [], 'pending': [], 'current': None, 'last_change': None}
+            return {
+                'shown': [],
+                'pending': [],
+                'current': None,
+                'last_change': None,
+                'photo_metadata': {}  # New: track when photos were added
+            }
 
     def save_history(self):
         """Save history to file"""
@@ -304,6 +377,72 @@ class InkyPhotoFrame:
 
         # Convert to string paths
         return [str(p) for p in photos]
+
+    def cleanup_old_photos(self):
+        """
+        Storage management: Delete oldest photos if exceeding MAX_PHOTOS
+        Uses FIFO policy - keeps most recently added photos
+        """
+        with self.lock:
+            all_photos = self.get_all_photos()
+
+            # Update metadata for new photos
+            for photo_path in all_photos:
+                if photo_path not in self.history['photo_metadata']:
+                    # New photo - add metadata
+                    file_stat = Path(photo_path).stat()
+                    self.history['photo_metadata'][photo_path] = {
+                        'added_at': datetime.fromtimestamp(file_stat.st_mtime).isoformat(),
+                        'size_bytes': file_stat.st_size,
+                        'displayed_count': 0
+                    }
+
+            # Remove metadata for deleted photos
+            existing_paths = set(all_photos)
+            metadata_paths = set(self.history['photo_metadata'].keys())
+            for removed_path in metadata_paths - existing_paths:
+                del self.history['photo_metadata'][removed_path]
+
+            # Check if we need to clean up
+            total_photos = len(all_photos)
+            if total_photos <= MAX_PHOTOS:
+                return
+
+            # Sort photos by date added (oldest first)
+            photos_with_dates = []
+            for photo_path in all_photos:
+                metadata = self.history['photo_metadata'].get(photo_path, {})
+                added_at = metadata.get('added_at', datetime.now().isoformat())
+                photos_with_dates.append((photo_path, added_at))
+
+            photos_with_dates.sort(key=lambda x: x[1])  # Sort by date
+
+            # Delete oldest photos
+            to_delete = total_photos - MAX_PHOTOS
+            logging.info(f'🗑️ Storage cleanup: deleting {to_delete} oldest photos (keeping {MAX_PHOTOS})')
+
+            for photo_path, added_at in photos_with_dates[:to_delete]:
+                # Don't delete the currently displayed photo
+                if photo_path == self.history['current']:
+                    continue
+
+                try:
+                    Path(photo_path).unlink()
+                    logging.info(f'Deleted: {Path(photo_path).name} (added {added_at})')
+
+                    # Remove from history
+                    if photo_path in self.history['shown']:
+                        self.history['shown'].remove(photo_path)
+                    if photo_path in self.history['pending']:
+                        self.history['pending'].remove(photo_path)
+                    if photo_path in self.history['photo_metadata']:
+                        del self.history['photo_metadata'][photo_path]
+
+                except Exception as e:
+                    logging.error(f'Error deleting {photo_path}: {e}')
+
+            self.save_history()
+            logging.info(f'✅ Cleanup complete: {len(self.get_all_photos())} photos remaining')
 
     def refresh_pending_list(self):
         """Update pending list with new photos"""
@@ -377,8 +516,12 @@ class InkyPhotoFrame:
 
         return img
 
+    @retry_on_error(max_attempts=3, delay=1, backoff=2)
     def display_photo(self, photo_path):
-        """Display a photo on the Inky screen"""
+        """
+        Display a photo on the Inky screen
+        Uses robust retry logic with exponential backoff
+        """
         try:
             img = self.process_image(photo_path)
 
@@ -388,62 +531,19 @@ class InkyPhotoFrame:
             except TypeError:
                 self.display.set_image(img)
 
-            logging.info('Displaying on screen...')
+            logging.info('📺 Displaying on screen...')
+            self.display.show()
+            logging.info(f'✅ Successfully displayed: {Path(photo_path).name}')
 
-            # Try to release SPI before showing
-            try:
-                subprocess.run(['sudo', 'dtparam', 'spi=off'], check=False, capture_output=True)
-                time_module.sleep(0.1)
-                subprocess.run(['sudo', 'dtparam', 'spi=on'], check=False, capture_output=True)
-                time_module.sleep(0.5)
-            except:
-                pass
+            # Update display count in metadata
+            with self.lock:
+                if photo_path in self.history['photo_metadata']:
+                    self.history['photo_metadata'][photo_path]['displayed_count'] += 1
 
-            # Show with retry logic for GPIO conflicts
-            retry_count = 0
-            while retry_count < 3:
-                try:
-                    self.display.show()
-                    logging.info(f'Successfully displayed: {Path(photo_path).name}')
-
-                    # IMPORTANT: Clean up display connection after each use to prevent "transport endpoint shutdown"
-                    try:
-                        # Force cleanup of the display object
-                        if hasattr(self.display, '_spi'):
-                            self.display._spi.close()
-                        del self.display
-                        logging.info('Display connection cleaned up')
-                        # Reinitialize for next use
-                        time_module.sleep(1)
-                        from inky.auto import auto
-                        self.display = auto()
-                        logging.info('Display reinitialized for next image')
-                    except Exception as cleanup_error:
-                        logging.warning(f'Cleanup warning: {cleanup_error}')
-
-                    return True
-                except Exception as show_error:
-                    if "GPIO" in str(show_error) or "pins we need are in use" in str(show_error) or "Cannot send" in str(show_error):
-                        retry_count += 1
-                        if retry_count < 3:
-                            logging.warning(f'Display error on attempt {retry_count}: {show_error}, retrying...')
-                            # Try to reset everything
-                            subprocess.run(['sudo', 'modprobe', '-r', 'spidev'], check=False, capture_output=True)
-                            subprocess.run(['sudo', 'modprobe', '-r', 'spi_bcm2835'], check=False, capture_output=True)
-                            time_module.sleep(1)
-                            subprocess.run(['sudo', 'modprobe', 'spi_bcm2835'], check=False, capture_output=True)
-                            subprocess.run(['sudo', 'modprobe', 'spidev'], check=False, capture_output=True)
-                            time_module.sleep(1)
-                            # Re-initialize display
-                            from inky.auto import auto
-                            self.display = auto()
-                        else:
-                            raise
-                    else:
-                        raise
+            return True
 
         except Exception as e:
-            logging.error(f'Error displaying photo: {e}')
+            logging.error(f'❌ Error displaying photo: {e}')
             return False
 
     def add_to_queue(self, photo_path):
@@ -463,6 +563,15 @@ class InkyPhotoFrame:
         logging.info(f'🆕 Displaying new photo immediately: {Path(photo_path).name}')
 
         with self.lock:
+            # Add metadata for new photo
+            if photo_path not in self.history['photo_metadata']:
+                file_stat = Path(photo_path).stat()
+                self.history['photo_metadata'][photo_path] = {
+                    'added_at': datetime.now().isoformat(),
+                    'size_bytes': file_stat.st_size,
+                    'displayed_count': 0
+                }
+
             # Move current to shown if exists
             if self.history['current']:
                 self.history['shown'].append(self.history['current'])
@@ -474,20 +583,8 @@ class InkyPhotoFrame:
             if photo_path in self.history['pending']:
                 self.history['pending'].remove(photo_path)
 
-        # Display the photo with error handling
-        try:
-            success = self.display_photo(photo_path)
-        except Exception as e:
-            logging.error(f'Failed to display photo {Path(photo_path).name}: {e}')
-            logging.info('Attempting to reinitialize display...')
-            try:
-                # Try to reinitialize display
-                from inky.auto import auto
-                self.display = auto()
-                success = self.display_photo(photo_path)
-            except Exception as e2:
-                logging.error(f'Reinitialize failed: {e2}')
-                success = False
+        # Display the photo (retry logic handled by decorator)
+        success = self.display_photo(photo_path)
 
         # Save history
         self.save_history()
@@ -565,9 +662,9 @@ class InkyPhotoFrame:
 
     def run(self):
         """Main loop with file watching"""
-        logging.info('🚀 Starting Inky Photo Frame')
         logging.info(f'⏰ Daily change time: {CHANGE_HOUR:02d}:00')
         logging.info(f'📁 Watching folder: {PHOTOS_DIR}')
+        logging.info(f'🗄️ Storage limit: {MAX_PHOTOS} photos (auto-cleanup enabled)')
 
         # Display current or welcome screen
         self.display_current_or_change()
@@ -591,35 +688,36 @@ class InkyPhotoFrame:
                         self.change_photo()
                     except Exception as e:
                         logging.error(f'Error changing photo: {e}')
-                        # Try to reinitialize display
-                        try:
-                            from inky.auto import auto
-                            self.display = auto()
-                            logging.info('Display reinitialized after error')
-                        except:
-                            pass
 
-                # Check for new photos periodically
-                if datetime.now().minute == 0:  # Every hour
+                # Periodic maintenance every hour
+                if datetime.now().minute == 0:
+                    # Refresh pending list
                     self.refresh_pending_list()
 
                     # Show welcome if no photos
                     if not self.get_all_photos() and self.history['current'] is None:
                         self.display_welcome()
 
+                # Storage cleanup check every 6 hours
+                time_since_cleanup = datetime.now() - self.last_cleanup
+                if time_since_cleanup > timedelta(hours=6):
+                    logging.info('🧹 Running periodic storage cleanup...')
+                    self.cleanup_old_photos()
+                    self.last_cleanup = datetime.now()
+
                 # Check if observer is still alive, restart if needed
                 if not observer.is_alive():
-                    logging.warning('File watcher stopped, restarting...')
+                    logging.warning('⚠️ File watcher stopped, restarting...')
                     observer = Observer()
                     observer.schedule(event_handler, str(PHOTOS_DIR), recursive=False)
                     observer.start()
-                    logging.info('File watcher restarted')
+                    logging.info('✅ File watcher restarted')
 
         except KeyboardInterrupt:
-            logging.info('Stopping photo frame')
+            logging.info('👋 Stopping photo frame')
             observer.stop()
         except Exception as e:
-            logging.error(f'Error in main loop: {e}')
+            logging.error(f'❌ Error in main loop: {e}')
             observer.stop()
 
         observer.join()

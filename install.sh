@@ -133,23 +133,27 @@ mkdir -p $INSTALL_DIR
 # STEP 10: Download application files from GitHub
 print_info "STEP 10: Downloading application files from GitHub..."
 
-# Always download from GitHub for consistency
-curl -sSL -o $INSTALL_DIR/inky_photo_frame.py https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/inky_photo_frame.py
-if [ $? -ne 0 ]; then
-    print_error "Failed to download inky_photo_frame.py"
-    exit 1
-fi
+# List of files to download
+FILES_TO_DOWNLOAD=(
+    "inky_photo_frame.py"
+    "bluetooth_wifi_smart.py"
+    "update.sh"
+    "inky-photo-frame-cli"
+    "logrotate.conf"
+)
 
-curl -sSL -o $INSTALL_DIR/bluetooth_wifi_smart.py https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/bluetooth_wifi_smart.py
-if [ $? -ne 0 ]; then
-    print_error "Failed to download bluetooth_wifi_smart.py"
-    exit 1
-fi
+# Always download from GitHub for consistency
+for file in "${FILES_TO_DOWNLOAD[@]}"; do
+    print_info "Downloading $file..."
+    curl -sSL -o $INSTALL_DIR/$file https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/$file
+    if [ $? -ne 0 ]; then
+        print_error "Failed to download $file"
+        exit 1
+    fi
+    chmod +x $INSTALL_DIR/$file
+done
 
 print_status "Application files downloaded successfully"
-
-chmod +x $INSTALL_DIR/inky_photo_frame.py
-chmod +x $INSTALL_DIR/bluetooth_wifi_smart.py
 
 # STEP 11: Configure Samba
 print_info "STEP 11: Configuring SMB file sharing..."
@@ -251,8 +255,21 @@ Restart=no
 WantedBy=multi-user.target
 EOF
 
-# STEP 15: Enable services (but don't start them if reboot is required)
-print_info "STEP 15: Enabling automatic startup..."
+# STEP 15: Install logrotate configuration
+print_info "STEP 15: Installing log rotation..."
+sudo cp $INSTALL_DIR/logrotate.conf /etc/logrotate.d/inky-photo-frame
+sudo chown root:root /etc/logrotate.d/inky-photo-frame
+sudo chmod 644 /etc/logrotate.d/inky-photo-frame
+print_status "Log rotation configured (7 days retention)"
+
+# STEP 16: Install CLI command
+print_info "STEP 16: Installing CLI command..."
+sudo cp $INSTALL_DIR/inky-photo-frame-cli /usr/local/bin/inky-photo-frame
+sudo chmod +x /usr/local/bin/inky-photo-frame
+print_status "CLI command installed: inky-photo-frame"
+
+# STEP 17: Enable services (but don't start them if reboot is required)
+print_info "STEP 17: Enabling automatic startup..."
 sudo systemctl daemon-reload
 sudo systemctl enable inky-photo-frame
 sudo systemctl enable inky-bluetooth-config
@@ -351,6 +368,13 @@ else
     echo "📷 The welcome screen is now displayed on your Inky display"
 fi
 echo "   Add photos to start your slideshow!"
+echo ""
+echo "🛠️  USEFUL COMMANDS:"
+echo "   inky-photo-frame status    # Check service status"
+echo "   inky-photo-frame logs      # View live logs"
+echo "   inky-photo-frame update    # Update to latest version"
+echo "   inky-photo-frame info      # Show system information"
+echo "   inky-photo-frame help      # Show all commands"
 echo ""
 print_info "See $INSTALL_DIR/README.md for more info"
 
