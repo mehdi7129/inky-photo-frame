@@ -34,13 +34,15 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.0.3"
+VERSION = "2.1.0"
 
 # Color calibration settings for e-ink display
-SATURATION = 0.6  # Color saturation (0.0 = B&W, 1.0 = full color) - Original default
+# Note: SATURATION is now auto-detected per display model (see detect_display_saturation)
+# - Spectra 2025 (6 colors): 0.4 (prevents over-saturation)
+# - Classic 7.3" (7 colors): 0.6 (standard)
+# - Unknown displays: 0.5 (safe default)
 AUTO_CONTRAST = True  # Enable/disable auto-contrast enhancement
 CONTRAST_CUTOFF = 2  # Auto-contrast cutoff (0-5, lower = less aggressive)
-COLOR_BALANCE_BLUE = 1.0  # Blue channel multiplier (1.0 = no adjustment)
 
 # Setup logging
 logging.basicConfig(
@@ -212,6 +214,10 @@ class InkyPhotoFrame:
         self.display = self.display_manager.initialize()
         self.width, self.height = self.display.resolution
 
+        # Detect display model and optimize saturation
+        self.saturation = self.detect_display_saturation()
+        logging.info(f'🎨 Display-specific saturation: {self.saturation}')
+
         # Register HEIF support if available
         try:
             import pillow_heif
@@ -231,6 +237,31 @@ class InkyPhotoFrame:
 
         # Storage management - cleanup old photos periodically
         self.last_cleanup = datetime.now()
+
+    def detect_display_saturation(self):
+        """
+        Auto-detect display model and return optimal saturation
+        Different Inky models have different color palettes and need different saturations
+        """
+        display_class = type(self.display).__name__
+
+        # Check display type from class name or resolution
+        if 'e673' in str(type(self.display).__module__).lower() or 'E673' in display_class:
+            # Inky Impression 7.3" Spectra 2025 (6 colors) - needs LOWER saturation
+            logging.info('📺 Detected: Inky Impression 7.3" Spectra 2025 (6 colors)')
+            return 0.4  # Lower saturation to avoid over-saturated colors
+        elif self.width == 800 and self.height == 480:
+            # Inky Impression 7.3" Classic (7 colors) - can handle more saturation
+            logging.info('📺 Detected: Inky Impression 7.3" Classic (7 colors)')
+            return 0.6  # Standard saturation
+        elif self.width == 1600 and self.height == 1200:
+            # Inky Impression 13.3" 2025 (6 colors) - needs lower saturation
+            logging.info('📺 Detected: Inky Impression 13.3" 2025 (6 colors)')
+            return 0.4  # Lower saturation like Spectra
+        else:
+            # Unknown display - use conservative default
+            logging.info(f'📺 Unknown display: {self.width}x{self.height}, using default saturation')
+            return 0.5  # Safe middle ground
 
     def get_ip_address(self):
         """Get the local IP address"""
@@ -509,10 +540,10 @@ class InkyPhotoFrame:
         try:
             img = self.process_image(photo_path)
 
-            # Set image with configurable saturation for color display
+            # Set image with display-specific saturation
             try:
-                self.display.set_image(img, saturation=SATURATION)
-                logging.info(f'Applied saturation: {SATURATION}')
+                self.display.set_image(img, saturation=self.saturation)
+                logging.debug(f'Applied saturation: {self.saturation}')
             except TypeError:
                 self.display.set_image(img)
 
