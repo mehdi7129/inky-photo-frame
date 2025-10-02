@@ -69,6 +69,8 @@ FILES_TO_UPDATE=(
     "inky_photo_frame.py"
     "bluetooth_wifi_smart.py"
     "update.sh"
+    "inky-photo-frame-cli"
+    "logrotate.conf"
 )
 
 for file in "${FILES_TO_UPDATE[@]}"; do
@@ -93,6 +95,21 @@ done
 NEW_VERSION="unknown"
 if [ -f "$INSTALL_DIR/inky_photo_frame.py" ]; then
     NEW_VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame.py" | cut -d'"' -f2)
+fi
+
+# Install CLI command to system
+if [ -f "$INSTALL_DIR/inky-photo-frame-cli" ]; then
+    print_info "Installing CLI command..."
+    sudo cp "$INSTALL_DIR/inky-photo-frame-cli" /usr/local/bin/inky-photo-frame
+    sudo chmod +x /usr/local/bin/inky-photo-frame
+fi
+
+# Install logrotate config
+if [ -f "$INSTALL_DIR/logrotate.conf" ]; then
+    print_info "Installing logrotate configuration..."
+    sudo cp "$INSTALL_DIR/logrotate.conf" /etc/logrotate.d/inky-photo-frame
+    sudo chown root:root /etc/logrotate.d/inky-photo-frame
+    sudo chmod 644 /etc/logrotate.d/inky-photo-frame
 fi
 
 # Restart the service
