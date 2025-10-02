@@ -34,7 +34,7 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.0.1"
+VERSION = "2.0.2"
 
 # Color calibration settings for e-ink display
 SATURATION = 0.4  # Color saturation (0.0 = B&W, 1.0 = full color) - Lower to reduce yellow/green tint
