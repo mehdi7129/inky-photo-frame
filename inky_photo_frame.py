@@ -34,7 +34,13 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.0.0"
+VERSION = "2.0.1"
+
+# Color calibration settings for e-ink display
+SATURATION = 0.5  # Color saturation (0.0 = B&W, 1.0 = full color) - Lower to reduce yellow/green tint
+AUTO_CONTRAST = True  # Enable/disable auto-contrast enhancement
+CONTRAST_CUTOFF = 1  # Auto-contrast cutoff (0-5, lower = less aggressive) - Reduced to preserve colors
+COLOR_TEMPERATURE = 0  # Color temperature adjustment (-50 to +50, negative = cooler/less yellow)
 
 # Setup logging
 logging.basicConfig(
@@ -456,9 +462,23 @@ class InkyPhotoFrame:
         self.save_history()
 
     def process_image(self, image_path):
-        """Process image for e-ink display with smart cropping"""
+        """Process image for e-ink display with smart cropping and color correction"""
         logging.info(f'Processing: {Path(image_path).name}')
         img = Image.open(image_path)
+
+        # Convert color profile to sRGB if needed (fixes P3/iPhone color shift)
+        if hasattr(img, 'info') and 'icc_profile' in img.info:
+            try:
+                from PIL import ImageCms
+                # Convert to sRGB color space to prevent color shifts
+                img = ImageCms.profileToProfile(img,
+                    ImageCms.ImageCmsProfile(img.info['icc_profile']),
+                    ImageCms.createProfile('sRGB'),
+                    renderingIntent=0,  # Perceptual
+                    outputMode='RGB')
+                logging.info('Converted color profile to sRGB')
+            except Exception as e:
+                logging.debug(f'Color profile conversion skipped: {e}')
 
         # Convert to RGB
         if img.mode != 'RGB':
@@ -487,8 +507,24 @@ class InkyPhotoFrame:
         # Resize to display size
         img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
 
-        # Enhance contrast for e-ink
-        img = ImageOps.autocontrast(img, cutoff=2)
+        # Color temperature adjustment (reduce yellow/green tint if needed)
+        if COLOR_TEMPERATURE != 0:
+            # Fast color adjustment using numpy if available, otherwise skip
+            try:
+                import numpy as np
+                img_array = np.array(img)
+                # Negative = cooler (more blue, less yellow/green)
+                # Positive = warmer (more yellow)
+                adjustment = -COLOR_TEMPERATURE / 100.0
+                img_array[:, :, 2] = np.clip(img_array[:, :, 2] + adjustment * 30, 0, 255)  # Blue channel
+                img = Image.fromarray(img_array.astype('uint8'))
+                logging.info(f'Applied color temperature: {COLOR_TEMPERATURE}')
+            except ImportError:
+                logging.debug('Numpy not available, skipping color temperature adjustment')
+
+        # Optional auto-contrast enhancement (can affect colors)
+        if AUTO_CONTRAST:
+            img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
 
         return img
 
@@ -501,9 +537,10 @@ class InkyPhotoFrame:
         try:
             img = self.process_image(photo_path)
 
-            # Set image with saturation for color display
+            # Set image with configurable saturation for color display
             try:
-                self.display.set_image(img, saturation=0.6)
+                self.display.set_image(img, saturation=SATURATION)
+                logging.info(f'Applied saturation: {SATURATION}')
             except TypeError:
                 self.display.set_image(img)
 
