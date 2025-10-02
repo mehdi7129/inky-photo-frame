@@ -245,12 +245,12 @@ class InkyPhotoFrame:
         img = Image.new('RGB', (self.width, self.height), color='white')
         draw = ImageDraw.Draw(img)
 
-        # Large, readable fonts for e-ink display
+        # VERY LARGE fonts for maximum readability on e-ink
         try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
-            ip_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 72)
-            info_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
-            cred_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 40)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 70)
+            ip_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 85)
+            info_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 45)
+            cred_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 48)
         except:
             title_font = ImageFont.load_default()
             ip_font = title_font
@@ -260,8 +260,8 @@ class InkyPhotoFrame:
         ip_address = self.get_ip_address()
 
         # Title
-        y_pos = 20
-        title = "📷 Photo Frame"
+        y_pos = 15
+        title = "Photo Frame"
         bbox = draw.textbbox((0, 0), title, font=title_font)
         x = (self.width - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_pos), title, font=title_font, fill='black')
