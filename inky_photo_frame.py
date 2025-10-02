@@ -34,7 +34,7 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.1.3"
+VERSION = "2.1.4"
 
 # Color calibration settings for e-ink display
 # Note: SATURATION is now auto-detected per display model (see detect_display_saturation)
@@ -541,25 +541,27 @@ class InkyPhotoFrame:
 
             # Spectra 6 has a very limited, muted color palette:
             # Real colors: Red=#a02020, Yellow=#f0e050, Green=#608050, Blue=#5080b8
-            # Strategy: Desaturate heavily, increase brightness, minimal contrast
+            # Problem: Spectra renders too cold/blue, lacks warmth
+            # Solution: Reduce blue channel, boost red slightly for warmth
 
             # Step 1: Increase brightness (Spectra renders dark)
             brightness = ImageEnhance.Brightness(img)
-            img = brightness.enhance(1.15)  # +15% brightness (was 1.08)
+            img = brightness.enhance(1.12)  # +12% brightness
 
-            # Step 2: Slightly reduce color intensity in problem areas
+            # Step 2: Channel balancing - reduce blue, boost red for warmth
             r, g, b = img.split()
-            # Reduce red/green less aggressively (was 0.92/0.90)
             r_enhancer = ImageEnhance.Brightness(r)
-            r = r_enhancer.enhance(0.95)  # Minimal red reduction
+            r = r_enhancer.enhance(1.05)  # +5% red for warmth
             g_enhancer = ImageEnhance.Brightness(g)
-            g = g_enhancer.enhance(0.93)  # Small green reduction
+            g = g_enhancer.enhance(0.95)  # -5% green (reduces yellow)
+            b_enhancer = ImageEnhance.Brightness(b)
+            b = b_enhancer.enhance(0.85)  # -15% blue (critical to add warmth)
             img = Image.merge('RGB', (r, g, b))
 
             # Step 3: NO contrast enhancement (preserve natural tones)
             # Spectra's limited palette means contrast makes colors worse
 
-            logging.info('Applied Spectra calibration (low saturation 0.3 + brightness + no contrast)')
+            logging.info('Applied Spectra calibration (saturation 0.3 + warmth boost + blue reduction)')
         else:
             # Classic displays: standard contrast enhancement
             img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
