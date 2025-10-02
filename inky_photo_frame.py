@@ -34,7 +34,7 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.1.4"
+VERSION = "2.1.5"
 
 # Color calibration settings for e-ink display
 # Note: SATURATION is now auto-detected per display model (see detect_display_saturation)
@@ -548,14 +548,14 @@ class InkyPhotoFrame:
             brightness = ImageEnhance.Brightness(img)
             img = brightness.enhance(1.12)  # +12% brightness
 
-            # Step 2: Channel balancing - reduce blue, boost red for warmth
+            # Step 2: Channel balancing - aggressive warmth boost
             r, g, b = img.split()
             r_enhancer = ImageEnhance.Brightness(r)
-            r = r_enhancer.enhance(1.05)  # +5% red for warmth
+            r = r_enhancer.enhance(1.15)  # +15% red for strong warmth (was 1.05)
             g_enhancer = ImageEnhance.Brightness(g)
-            g = g_enhancer.enhance(0.95)  # -5% green (reduces yellow)
+            g = g_enhancer.enhance(0.92)  # -8% green (reduces yellow, was -5%)
             b_enhancer = ImageEnhance.Brightness(b)
-            b = b_enhancer.enhance(0.85)  # -15% blue (critical to add warmth)
+            b = b_enhancer.enhance(0.75)  # -25% blue (aggressive reduction, was -15%)
             img = Image.merge('RGB', (r, g, b))
 
             # Step 3: NO contrast enhancement (preserve natural tones)
