@@ -4,7 +4,27 @@ Inky Photo Frame - Digital photo frame for Inky Impression 7.3"
 Displays photos from SMB share with immediate display of new photos
 Changes daily at 5AM with intelligent rotation
 
-Version: 2.0.0
+Version: 2.3.0
+
+Color Management:
+-----------------
+Change COLOR_MODE setting (line 44) to choose color handling:
+
+1. 'pimoroni' - Official Pimoroni defaults
+   - Saturation: 0.5
+   - Auto-contrast enabled
+   - Best for: General use, Classic 7.3" displays
+
+2. 'spectra_palette' - Calibrated 6-color palette (RECOMMENDED for Spectra)
+   - Maps to actual Spectra RGB values (not idealized colors)
+   - Uses quantization with Floyd-Steinberg dithering
+   - Calibrated palette: R=#a02020, Y=#f0e050, G=#608050, B=#5080b8
+   - Best for: Accurate colors on Spectra 6 displays
+
+3. 'warmth_boost' - Aggressive warmth enhancement (v2.1.5)
+   - Red +15%, Green -8%, Blue -25%
+   - Brightness +12%, Saturation 0.3
+   - Best for: Warm skin tones, portraits
 """
 
 import os
@@ -34,13 +54,39 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.2.0"
+VERSION = "2.3.0"
 
 # Color calibration settings for e-ink display
-# Using Pimoroni's official recommended settings
+# COLOR_MODE options:
+#   'pimoroni'        - Pimoroni default (saturation 0.5, auto-contrast)
+#   'spectra_palette' - Direct mapping to calibrated 6-color Spectra palette
+#   'warmth_boost'    - v2.1.5 aggressive RGB warmth adjustments
+COLOR_MODE = 'spectra_palette'  # Change this to switch color handling
+
+# Pimoroni defaults
 SATURATION = 0.5  # Pimoroni default for all displays
 AUTO_CONTRAST = True  # Enable/disable auto-contrast enhancement
 CONTRAST_CUTOFF = 2  # Auto-contrast cutoff (0-5, lower = less aggressive)
+
+# Spectra 6 calibrated palette (measured against sRGB monitor)
+# These are the ACTUAL colors the e-ink can produce, not idealized RGB
+SPECTRA_PALETTE = {
+    'black':  (0x00, 0x00, 0x00),
+    'white':  (0xff, 0xff, 0xff),
+    'red':    (0xa0, 0x20, 0x20),  # Much darker than #FF0000
+    'yellow': (0xf0, 0xe0, 0x50),  # Warmer than #FFFF00
+    'green':  (0x60, 0x80, 0x50),  # Muted, shifted towards cyan
+    'blue':   (0x50, 0x80, 0xb8),  # Much lighter/cyan than #0000FF
+}
+
+# Warmth boost settings (v2.1.5 aggressive mode)
+WARMTH_BOOST_CONFIG = {
+    'red_boost': 1.15,      # +15% red
+    'green_reduce': 0.92,   # -8% green
+    'blue_reduce': 0.75,    # -25% blue
+    'brightness': 1.12,     # +12% brightness
+    'saturation': 0.3       # Very low saturation for Spectra
+}
 
 # Setup logging
 logging.basicConfig(
@@ -214,7 +260,15 @@ class InkyPhotoFrame:
 
         # Detect display model and optimize saturation
         self.saturation = self.detect_display_saturation()
+        logging.info(f'🎨 Color mode: {COLOR_MODE}')
         logging.info(f'🎨 Display-specific saturation: {self.saturation}')
+
+        if COLOR_MODE == 'spectra_palette' and self.is_spectra:
+            logging.info('🎨 Using calibrated Spectra 6-color palette:')
+            for name, rgb in SPECTRA_PALETTE.items():
+                logging.info(f'   {name}: #{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}')
+        elif COLOR_MODE == 'warmth_boost' and self.is_spectra:
+            logging.info('🔥 Using aggressive warmth boost (v2.1.5 mode)')
 
         # Register HEIF support if available
         try:
@@ -247,18 +301,21 @@ class InkyPhotoFrame:
         # Check display type from class name or resolution
         if 'e673' in str(type(self.display).__module__).lower() or 'E673' in display_class:
             logging.info('📺 Detected: Inky Impression 7.3" Spectra 2025 (6 colors)')
-            self.is_spectra = False  # No special handling
+            self.is_spectra = True
         elif self.width == 800 and self.height == 480:
             logging.info('📺 Detected: Inky Impression 7.3" Classic (7 colors)')
             self.is_spectra = False
         elif self.width == 1600 and self.height == 1200:
             logging.info('📺 Detected: Inky Impression 13.3" 2025 (6 colors)')
-            self.is_spectra = False  # No special handling
+            self.is_spectra = True
         else:
             logging.info(f'📺 Unknown display: {self.width}x{self.height}')
             self.is_spectra = False
 
-        return SATURATION  # Pimoroni default (0.5) for all displays
+        # Return saturation based on color mode
+        if COLOR_MODE == 'warmth_boost':
+            return WARMTH_BOOST_CONFIG['saturation']
+        return SATURATION
 
     def get_ip_address(self):
         """Get the local IP address"""
@@ -489,6 +546,74 @@ class InkyPhotoFrame:
 
         self.save_history()
 
+    def _apply_spectra_palette(self, img):
+        """
+        Map image to calibrated Spectra 6-color palette using quantization.
+        This gives more accurate colors by using the ACTUAL RGB values the e-ink can produce.
+        """
+        from PIL import ImageEnhance
+
+        # Step 1: Pre-process for better palette mapping
+        # Boost contrast and saturation slightly to compensate for e-ink limitations
+        enhancer = ImageEnhance.Contrast(img)
+        img = enhancer.enhance(1.2)  # +20% contrast
+
+        enhancer = ImageEnhance.Color(img)
+        img = enhancer.enhance(1.3)  # +30% saturation before mapping
+
+        # Step 2: Create palette image with the 6 calibrated colors
+        palette_colors = list(SPECTRA_PALETTE.values())
+
+        # Create a palette image (must be 'P' mode)
+        # PIL palette format: flat list of RGB values
+        palette_data = []
+        for color in palette_colors:
+            palette_data.extend(color)
+
+        # Pad palette to 256 colors (PIL requirement)
+        while len(palette_data) < 768:  # 256 colors * 3 channels
+            palette_data.extend([0, 0, 0])
+
+        # Create palette image
+        palette_img = Image.new('P', (1, 1))
+        palette_img.putpalette(palette_data)
+
+        # Step 3: Quantize image to our 6-color palette
+        # Using Floyd-Steinberg dithering for smoother transitions
+        img = img.quantize(palette=palette_img, dither=Image.Dither.FLOYDSTEINBERG)
+
+        # Convert back to RGB for display
+        img = img.convert('RGB')
+
+        return img
+
+    def _apply_warmth_boost(self, img):
+        """
+        Apply v2.1.5 aggressive warmth boost via RGB channel adjustments.
+        Boosts red, reduces blue to add warmth to skin tones.
+        """
+        from PIL import ImageEnhance
+
+        # Step 1: Increase brightness
+        brightness = ImageEnhance.Brightness(img)
+        img = brightness.enhance(WARMTH_BOOST_CONFIG['brightness'])
+
+        # Step 2: Channel balancing for warmth
+        r, g, b = img.split()
+
+        r_enhancer = ImageEnhance.Brightness(r)
+        r = r_enhancer.enhance(WARMTH_BOOST_CONFIG['red_boost'])
+
+        g_enhancer = ImageEnhance.Brightness(g)
+        g = g_enhancer.enhance(WARMTH_BOOST_CONFIG['green_reduce'])
+
+        b_enhancer = ImageEnhance.Brightness(b)
+        b = b_enhancer.enhance(WARMTH_BOOST_CONFIG['blue_reduce'])
+
+        img = Image.merge('RGB', (r, g, b))
+
+        return img
+
     def process_image(self, image_path):
         """Process image for e-ink display with smart cropping and color correction"""
         logging.info(f'Processing: {Path(image_path).name}')
@@ -523,9 +648,27 @@ class InkyPhotoFrame:
         # Resize to display size
         img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
 
-        # Apply standard auto-contrast (Pimoroni recommended)
-        if AUTO_CONTRAST:
-            img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
+        # Apply color mode processing
+        if COLOR_MODE == 'pimoroni':
+            # Pimoroni default: simple auto-contrast
+            if AUTO_CONTRAST:
+                img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
+            logging.debug('Applied Pimoroni default processing')
+
+        elif COLOR_MODE == 'spectra_palette' and self.is_spectra:
+            # Spectra palette mode: map to calibrated 6-color palette
+            img = self._apply_spectra_palette(img)
+            logging.info('✨ Applied calibrated Spectra 6-color palette mapping')
+
+        elif COLOR_MODE == 'warmth_boost' and self.is_spectra:
+            # v2.1.5 aggressive warmth boost mode
+            img = self._apply_warmth_boost(img)
+            logging.info('🔥 Applied aggressive warmth boost (v2.1.5)')
+
+        else:
+            # Fallback to Pimoroni default
+            if AUTO_CONTRAST:
+                img = ImageOps.autocontrast(img, cutoff=CONTRAST_CUTOFF)
 
         return img
 
