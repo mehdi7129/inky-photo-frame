@@ -1,5 +1,24 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🔧 Version 1.1.1 (2025-10-24)
+
+### Bug Fix Release
+
+#### Fixes
+- **Optional Button Support**: Made gpiozero import optional - service now starts even if gpiozero is not installed
+- **Graceful Degradation**: Button controller initialization wrapped in try/except for better error handling
+- **Installation**: Added gpiozero to install.sh dependencies
+
+#### Technical Changes
+- Import gpiozero with try/except at module level
+- Check BUTTONS_AVAILABLE flag before initializing ButtonController
+- Improved logging for button initialization failures
+- Service starts successfully without button support if gpiozero unavailable
+
+This fixes the update failure where service wouldn't start if gpiozero wasn't installed.
+
+---
+
 ## 🎉 Version 1.1.0 (2025-10-24)
 
 ### 🎮 Physical Button Controls - Interactive Photo Frame

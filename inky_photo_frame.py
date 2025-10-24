@@ -4,7 +4,7 @@ Inky Photo Frame - Digital photo frame for Inky Impression 7.3"
 Displays photos from SMB share with immediate display of new photos
 Changes daily at 5AM with intelligent rotation
 
-Version: 1.1.0
+Version: 1.1.1
 
 Color Management:
 -----------------
@@ -47,7 +47,13 @@ import subprocess
 import atexit
 import signal
 from functools import wraps
-from gpiozero import Button
+
+# Optional GPIO button support
+try:
+    from gpiozero import Button
+    BUTTONS_AVAILABLE = True
+except ImportError:
+    BUTTONS_AVAILABLE = False
 
 # Configuration
 PHOTOS_DIR = Path('/home/pi/Images')
@@ -56,7 +62,7 @@ COLOR_MODE_FILE = Path('/home/pi/.inky_color_mode.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 
 # Color calibration settings for e-ink display
 # COLOR_MODE options:
@@ -367,8 +373,16 @@ class InkyPhotoFrame:
         # Storage management - cleanup old photos periodically
         self.last_cleanup = datetime.now()
 
-        # Initialize button controller
-        self.button_controller = ButtonController(self)
+        # Initialize button controller (optional - only if gpiozero is available)
+        if BUTTONS_AVAILABLE:
+            try:
+                self.button_controller = ButtonController(self)
+            except Exception as e:
+                logging.warning(f'⚠️ Button controller initialization failed: {e}')
+                self.button_controller = None
+        else:
+            logging.info('ℹ️ Button support disabled (gpiozero not available)')
+            self.button_controller = None
 
     def detect_display_saturation(self):
         """

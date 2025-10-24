@@ -157,7 +157,7 @@ pip install inky[rpi,example-depends]
 
 # STEP 8: Install additional Python packages
 print_info "STEP 8: Installing Python dependencies..."
-pip install pillow pillow-heif watchdog
+pip install pillow pillow-heif watchdog gpiozero
 
 # STEP 9: Create installation directory
 print_info "STEP 9: Creating application directory..."
