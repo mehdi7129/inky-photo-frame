@@ -96,6 +96,16 @@ if [ -f "$INSTALL_DIR/inky_photo_frame.py" ]; then
     NEW_VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame.py" | cut -d'"' -f2)
 fi
 
+# Install system dependencies for lgpio (required for GPIO buttons)
+print_info "Installing system dependencies for GPIO support..."
+sudo apt-get update -qq
+sudo apt-get install -y swig python3-dev liblgpio-dev > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    print_status "System dependencies installed (swig, python3-dev, liblgpio-dev)"
+else
+    print_error "Failed to install system dependencies"
+fi
+
 # Install/update Python dependencies
 print_info "Installing Python dependencies..."
 if source ~/.virtualenvs/pimoroni/bin/activate 2>/dev/null; then

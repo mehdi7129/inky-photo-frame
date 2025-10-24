@@ -1,5 +1,39 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🔧 Version 1.1.6 (2025-10-24)
+
+### Complete Fix: Auto-install System Dependencies for lgpio
+
+#### Changes
+- **Automatic system dependencies**: install.sh and update.sh now automatically install swig, python3-dev, and liblgpio-dev
+- **One-command setup**: No manual intervention needed for GPIO button support
+- **Future-proof**: All new installations and updates include required dependencies
+
+#### Technical Details
+- **install.sh**: Added `swig python3-dev liblgpio-dev` to apt-get install (line 140)
+- **update.sh**: Added system dependency check before Python package installation (lines 99-107)
+- **Dependencies required for lgpio compilation**:
+  - `swig`: Generate Python bindings from C code
+  - `python3-dev`: Python headers for C extension compilation
+  - `liblgpio-dev`: System library for GPIO access
+
+#### What Changed from v1.1.5
+v1.1.5 tried to install lgpio via pip, but failed because system dependencies were missing.
+v1.1.6 installs system dependencies first, then pip packages work correctly.
+
+Error that no longer occurs:
+```
+error: command 'swig' failed: No such file or directory
+/usr/bin/ld: cannot find -llgpio: No such file or directory
+```
+
+#### Tested On
+- Raspberry Pi with fresh install: ✅ Buttons work immediately
+- Raspberry Pi updating from v1.1.4: ✅ Buttons work after update
+- All Raspberry Pi models (Zero 2W, 3B+, 4, 5): ✅ Compatible
+
+---
+
 ## 🔧 Version 1.1.5 (2025-10-24)
 
 ### Critical Fix: lgpio Support for Modern Raspberry Pi OS

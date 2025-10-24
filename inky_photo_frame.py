@@ -4,7 +4,7 @@ Inky Photo Frame - Digital photo frame for Inky Impression 7.3"
 Displays photos from SMB share with immediate display of new photos
 Changes daily at 5AM with intelligent rotation
 
-Version: 1.1.5
+Version: 1.1.6
 
 Color Management:
 -----------------
@@ -62,7 +62,7 @@ COLOR_MODE_FILE = Path('/home/pi/.inky_color_mode.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "1.1.5"
+VERSION = "1.1.6"
 
 # Color calibration settings for e-ink display
 # COLOR_MODE options:

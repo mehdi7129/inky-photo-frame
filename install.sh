@@ -137,7 +137,7 @@ sudo apt-get update
 
 # STEP 4: Install required system packages
 print_info "STEP 4: Installing required packages..."
-sudo apt-get install -y python3-pip python3-venv samba samba-common-bin git hostapd dnsmasq fonts-dejavu fonts-dejavu-core
+sudo apt-get install -y python3-pip python3-venv samba samba-common-bin git hostapd dnsmasq fonts-dejavu fonts-dejavu-core swig python3-dev liblgpio-dev
 
 # STEP 5: Create photos directory
 print_info "STEP 5: Creating photos directory..."
