@@ -101,35 +101,28 @@ if [ -f /boot/firmware/config.txt ]; then
 fi
 
 # STEP 2.5: Disable Raspberry Pi LEDs (no light pollution)
-print_info "STEP 2.5: Disabling Raspberry Pi LEDs..."
+print_info "STEP 2.5: Disabling Raspberry Pi LEDs via systemd service..."
 
-# Disable LEDs in /boot/config.txt
-if ! grep -q "# Disable LEDs" /boot/config.txt 2>/dev/null; then
-    echo "" | sudo tee -a /boot/config.txt > /dev/null
-    echo "# Disable LEDs" | sudo tee -a /boot/config.txt > /dev/null
-    echo "dtparam=act_led_trigger=none" | sudo tee -a /boot/config.txt > /dev/null
-    echo "dtparam=act_led_activelow=on" | sudo tee -a /boot/config.txt > /dev/null
-    echo "dtparam=pwr_led_trigger=none" | sudo tee -a /boot/config.txt > /dev/null
-    echo "dtparam=pwr_led_activelow=off" | sudo tee -a /boot/config.txt > /dev/null
-    print_status "LEDs disabled in /boot/config.txt"
-    REBOOT_REQUIRED=true
-else
-    print_status "LEDs already disabled in /boot/config.txt"
-fi
+# Create systemd service to disable LEDs (more reliable than config.txt)
+sudo tee /etc/systemd/system/disable-leds.service > /dev/null << 'EOF'
+[Unit]
+Description=Disable Raspberry Pi LEDs
+After=multi-user.target
 
-# Also disable in firmware config if it exists
-if [ -f /boot/firmware/config.txt ]; then
-    if ! grep -q "# Disable LEDs" /boot/firmware/config.txt 2>/dev/null; then
-        echo "" | sudo tee -a /boot/firmware/config.txt > /dev/null
-        echo "# Disable LEDs" | sudo tee -a /boot/firmware/config.txt > /dev/null
-        echo "dtparam=act_led_trigger=none" | sudo tee -a /boot/firmware/config.txt > /dev/null
-        echo "dtparam=act_led_activelow=on" | sudo tee -a /boot/firmware/config.txt > /dev/null
-        echo "dtparam=pwr_led_trigger=none" | sudo tee -a /boot/firmware/config.txt > /dev/null
-        echo "dtparam=pwr_led_activelow=off" | sudo tee -a /boot/firmware/config.txt > /dev/null
-        print_status "LEDs disabled in /boot/firmware/config.txt"
-        REBOOT_REQUIRED=true
-    fi
-fi
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo none > /sys/class/leds/ACT/trigger'
+ExecStart=/bin/sh -c 'echo 1 > /sys/class/leds/ACT/brightness'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start the service
+sudo systemctl enable disable-leds.service > /dev/null 2>&1
+sudo systemctl start disable-leds.service > /dev/null 2>&1
+print_status "LED disable service installed and enabled"
 
 # STEP 3: Update system
 print_info "STEP 3: Updating system packages..."

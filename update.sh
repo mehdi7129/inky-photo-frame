@@ -132,6 +132,27 @@ else
     print_status "GPIO permissions OK"
 fi
 
+# Disable Raspberry Pi LEDs (no light pollution)
+print_info "Setting up LED disable service..."
+sudo tee /etc/systemd/system/disable-leds.service > /dev/null << 'EOF'
+[Unit]
+Description=Disable Raspberry Pi LEDs
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo none > /sys/class/leds/ACT/trigger'
+ExecStart=/bin/sh -c 'echo 1 > /sys/class/leds/ACT/brightness'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable disable-leds.service > /dev/null 2>&1
+sudo systemctl start disable-leds.service > /dev/null 2>&1
+print_status "LED disable service installed and enabled"
+
 # Install CLI command to system
 if [ -f "$INSTALL_DIR/inky-photo-frame-cli" ]; then
     print_info "Installing CLI command..."

@@ -1,8 +1,20 @@
-# 📋 Résumé des Améliorations v1.1.6
+# 📋 Résumé des Améliorations v1.1.7
 
 ## ✅ Ce qui a été corrigé
 
-### 🔴 Problème : Boutons GPIO ne fonctionnent pas
+### 🔴 Problème : LED ACT se rallume après update
+- ✅ **Service systemd permanent** : LED désactivée via service au démarrage
+- ✅ **Contrôle direct sysfs** : Méthode plus fiable que config.txt
+- ✅ **Persistant** : LED reste éteinte même après reboot ou updates
+- ✅ **Automatique** : Service créé et activé automatiquement
+
+**Résultat** : Plus aucune pollution lumineuse, LED toujours éteinte
+
+---
+
+## ✅ Ce qui a été corrigé (versions précédentes)
+
+### 🔴 Problème : Boutons GPIO ne fonctionnent pas (v1.1.6)
 - ✅ **Installation automatique** : swig, python3-dev, liblgpio-dev installés automatiquement
 - ✅ **lgpio fonctionnel** : Backend GPIO moderne pour Raspberry Pi OS Bookworm
 - ✅ **Permissions GPIO** : Ajout automatique au groupe gpio
@@ -105,16 +117,20 @@ curl -sSL https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/inst
 ```bash
 # 1. Vérifier la version
 inky-photo-frame version
-# Doit afficher : v1.1.6
+# Doit afficher : v1.1.7
 
 # 2. Vérifier le service
 inky-photo-frame status
 # Doit être : active (running)
 
-# 3. Voir les logs
+# 3. Vérifier le service LED
+sudo systemctl status disable-leds.service
+# Doit être : active (exited)
+
+# 4. Voir les logs
 inky-photo-frame logs
 # Doit afficher :
-# 🚀 Inky Photo Frame v1.1.6
+# 🚀 Inky Photo Frame v1.1.7
 # ✅ Display initialized: 800x480
 # ✅ Button controller initialized (GPIO 5,6,16,24)
 # 🗄️ Storage limit: 1000 photos (auto-cleanup enabled)

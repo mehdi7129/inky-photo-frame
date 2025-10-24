@@ -1,5 +1,39 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🔧 Version 1.1.7 (2025-10-24)
+
+### Fix: Reliable LED Disable via systemd Service
+
+#### Problem
+After system updates or certain operations, the ACT LED would turn back on despite being "disabled" in /boot/config.txt. The config.txt method is not reliable on modern Raspberry Pi OS.
+
+#### Solution
+Created a systemd service (`disable-leds.service`) that forcibly disables the ACT LED at boot time using direct sysfs control:
+```bash
+echo none > /sys/class/leds/ACT/trigger
+echo 1 > /sys/class/leds/ACT/brightness
+```
+
+#### Changes
+- **install.sh**: Replaced config.txt LED disable with systemd service (lines 103-125)
+- **update.sh**: Added LED disable service creation during updates (lines 135-154)
+- **Automatic**: Service is created, enabled, and started automatically
+- **Persistent**: LED stays off even after reboots or system updates
+
+#### Technical Details
+The systemd service:
+- Runs after multi-user.target to ensure sysfs is available
+- Uses `Type=oneshot` with `RemainAfterExit=yes` for proper state tracking
+- Writes directly to `/sys/class/leds/ACT/` for guaranteed control
+- More reliable than dtparam settings which can be overridden
+
+#### Why This Works Better
+- **config.txt method**: Hardware-level, but can be ignored by kernel
+- **systemd method**: Software-level at boot, guaranteed execution
+- **Direct sysfs control**: Bypasses all abstraction layers
+
+---
+
 ## 🔧 Version 1.1.6 (2025-10-24)
 
 ### Complete Fix: Auto-install System Dependencies for lgpio
