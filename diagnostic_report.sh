@@ -38,9 +38,6 @@ echo "-----------------" >> $OUTPUT_FILE
 echo "Inky Photo Frame Service:" >> $OUTPUT_FILE
 systemctl status inky-photo-frame --no-pager >> $OUTPUT_FILE 2>&1
 echo "" >> $OUTPUT_FILE
-echo "Bluetooth Config Service:" >> $OUTPUT_FILE
-systemctl status inky-bluetooth-config --no-pager >> $OUTPUT_FILE 2>&1
-echo "" >> $OUTPUT_FILE
 
 echo "4. DIRECTORY STRUCTURE" >> $OUTPUT_FILE
 echo "----------------------" >> $OUTPUT_FILE

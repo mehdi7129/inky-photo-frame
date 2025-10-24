@@ -67,7 +67,6 @@ print_info "Downloading updates from GitHub..."
 
 FILES_TO_UPDATE=(
     "inky_photo_frame.py"
-    "bluetooth_wifi_smart.py"
     "update.sh"
     "inky-photo-frame-cli"
     "logrotate.conf"

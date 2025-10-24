@@ -37,7 +37,6 @@ L'installation va :
 - ✅ Configurer le partage SMB
 - ✅ Créer l'utilisateur `inky` avec mot de passe `inkyimpression73_2025`
 - ✅ Démarrer automatiquement au boot
-- ✅ Activer la configuration WiFi par Bluetooth
 
 ## 📱 Configuration depuis votre téléphone
 
@@ -61,32 +60,6 @@ Après l'installation, l'écran affiche les instructions de connexion avec :
 7. **Glissez vos photos** depuis votre galerie
 
 **💡 La nouvelle photo s'affiche instantanément sur l'écran !**
-
-## 🔧 Configuration WiFi par Bluetooth
-
-Si votre WiFi change (nouvelle box, nouveau mot de passe) :
-
-### Configuration Bluetooth :
-
-#### iPhone/iPad :
-1. **Installez "Bluetooth Terminal"** ou **"BlueTerm"** depuis l'App Store
-
-#### Android :
-1. **Installez "Serial Bluetooth Terminal"** depuis Google Play Store
-2. **Activez le Bluetooth** sur votre téléphone
-3. Dans **Réglages → Bluetooth**, trouvez **"Inky-PhotoFrame"**
-4. **Appairez** votre iPhone avec l'appareil
-5. **Ouvrez Bluetooth Terminal**
-6. **Connectez-vous** à Inky-PhotoFrame
-7. Suivez le menu :
-   ```
-   === Inky Photo Frame WiFi Config ===
-   1 - Scanner les réseaux
-   2 - Se connecter au WiFi
-   3 - Voir le statut
-   >
-   ```
-8. Tapez `2`, puis entrez le nom et mot de passe du nouveau WiFi
 
 ## 🎨 Fonctionnement
 
@@ -121,9 +94,6 @@ sudo systemctl restart inky-photo-frame
 
 # Voir l'historique des photos
 cat ~/.inky_history.json | python3 -m json.tool
-
-# Tester le Bluetooth
-sudo systemctl status inky-bluetooth-config
 ```
 
 ## ❓ Résolution de Problèmes
@@ -146,16 +116,6 @@ sudo systemctl status inky-photo-frame
 1. Vérifiez le format (JPG, PNG, HEIC)
 2. Vérifiez les logs : `tail -f /home/pi/inky_photo_frame.log`
 3. Vérifiez les permissions : `ls -la /home/pi/InkyPhotos`
-
-### Le Bluetooth ne fonctionne pas
-```bash
-# Activez le Bluetooth
-sudo systemctl start bluetooth
-sudo hciconfig hci0 up
-
-# Redémarrez le service
-sudo systemctl restart inky-bluetooth-config
-```
 
 ## 🗑 Désinstallation
 

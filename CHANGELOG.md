@@ -36,7 +36,6 @@ Deleted: old_photo_001.jpg (added 2024-01-15T10:30:00)
 #### ✅ Rotation des Logs avec Logrotate
 - **Fichier** : `/etc/logrotate.d/inky-photo-frame`
 - **Rotation quotidienne** : 7 jours de rétention (inky_photo_frame.log)
-- **Rotation hebdomadaire** : 4 semaines de rétention (bluetooth_config.log)
 - **Compression automatique** : Économie d'espace disque
 - **Installation** : Automatique via install.sh
 

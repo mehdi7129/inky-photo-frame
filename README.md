@@ -67,7 +67,6 @@ That's it! The installer handles everything:
 - ✅ Dependencies
 - ✅ SMB file sharing
 - ✅ Auto-start on boot
-- ✅ Bluetooth configuration
 - ✅ Disables all Raspberry Pi LEDs (no light pollution)
 
 ### 🔄 Update to Latest Version

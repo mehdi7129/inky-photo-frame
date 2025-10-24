@@ -34,10 +34,7 @@ fi
 print_info "Arrêt des services..."
 sudo systemctl stop inky-photo-frame
 sudo systemctl disable inky-photo-frame
-sudo systemctl stop inky-bluetooth-config
-sudo systemctl disable inky-bluetooth-config
 sudo rm /etc/systemd/system/inky-photo-frame.service
-sudo rm /etc/systemd/system/inky-bluetooth-config.service
 sudo systemctl daemon-reload
 
 # Remove SMB share
