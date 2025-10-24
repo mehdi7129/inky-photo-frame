@@ -1,4 +1,4 @@
-# 📋 Résumé des Améliorations v2.0.0
+# 📋 Résumé des Améliorations v1.0.1
 
 ## ✅ Ce qui a été corrigé
 
@@ -92,7 +92,7 @@ curl -sSL https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/inst
 ```bash
 # 1. Vérifier la version
 inky-photo-frame version
-# Doit afficher : v2.0.0
+# Doit afficher : v1.0.1
 
 # 2. Vérifier le service
 inky-photo-frame status
@@ -101,7 +101,7 @@ inky-photo-frame status
 # 3. Voir les logs
 inky-photo-frame logs
 # Doit afficher :
-# 🚀 Inky Photo Frame v2.0.0
+# 🚀 Inky Photo Frame v1.0.1
 # ✅ Display initialized: 800x480
 # 🗄️ Storage limit: 1000 photos (auto-cleanup enabled)
 ```

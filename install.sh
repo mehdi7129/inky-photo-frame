@@ -108,7 +108,7 @@ if ! grep -q "# Disable LEDs" /boot/config.txt 2>/dev/null; then
     echo "" | sudo tee -a /boot/config.txt > /dev/null
     echo "# Disable LEDs" | sudo tee -a /boot/config.txt > /dev/null
     echo "dtparam=act_led_trigger=none" | sudo tee -a /boot/config.txt > /dev/null
-    echo "dtparam=act_led_activelow=off" | sudo tee -a /boot/config.txt > /dev/null
+    echo "dtparam=act_led_activelow=on" | sudo tee -a /boot/config.txt > /dev/null
     echo "dtparam=pwr_led_trigger=none" | sudo tee -a /boot/config.txt > /dev/null
     echo "dtparam=pwr_led_activelow=off" | sudo tee -a /boot/config.txt > /dev/null
     print_status "LEDs disabled in /boot/config.txt"
@@ -123,7 +123,7 @@ if [ -f /boot/firmware/config.txt ]; then
         echo "" | sudo tee -a /boot/firmware/config.txt > /dev/null
         echo "# Disable LEDs" | sudo tee -a /boot/firmware/config.txt > /dev/null
         echo "dtparam=act_led_trigger=none" | sudo tee -a /boot/firmware/config.txt > /dev/null
-        echo "dtparam=act_led_activelow=off" | sudo tee -a /boot/firmware/config.txt > /dev/null
+        echo "dtparam=act_led_activelow=on" | sudo tee -a /boot/firmware/config.txt > /dev/null
         echo "dtparam=pwr_led_trigger=none" | sudo tee -a /boot/firmware/config.txt > /dev/null
         echo "dtparam=pwr_led_activelow=off" | sudo tee -a /boot/firmware/config.txt > /dev/null
         print_status "LEDs disabled in /boot/firmware/config.txt"

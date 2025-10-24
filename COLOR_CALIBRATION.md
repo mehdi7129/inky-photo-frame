@@ -7,7 +7,7 @@ If your photos appear with a yellow/green tint on the e-ink display, this is usu
 2. **Over-saturation** making colors too intense
 3. **Auto-contrast** shifting color balance
 
-## ✅ v2.0.1 Improvements
+## ✅ v1.0.1 Improvements
 
 ### Automatic Fixes
 - ✅ **P3 → sRGB conversion**: Photos from iPhone/modern phones are now correctly converted
@@ -138,7 +138,7 @@ sudo journalctl -u inky-photo-frame -n 20 | grep -E "saturation|temperature|Conv
 
 ## 📸 Before/After Example
 
-With v2.0.1 improvements:
+With v1.0.1 improvements:
 - ✅ iPhone photos: Colors match original better
 - ✅ Skin tones: More natural, less yellow
 - ✅ Blues/greens: Accurate instead of shifted
@@ -151,7 +151,7 @@ E-ink displays have limited color palettes:
 - **Inky 7.3" 2025**: 6 colors
 - **Inky 13.3" 2025**: 6 colors
 
-Some color shifts are **inherent to e-ink technology** and cannot be fully corrected. The improvements in v2.0.1 minimize these issues.
+Some color shifts are **inherent to e-ink technology** and cannot be fully corrected. The improvements in v1.0.1 minimize these issues.
 
 ## 🆘 Still Having Issues?
 
@@ -163,4 +163,4 @@ If colors are still wrong after trying these settings:
 
 ---
 
-**Updated for v2.0.1** - Color calibration improvements
+**Updated for v1.0.1** - Color calibration improvements

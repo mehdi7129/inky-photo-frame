@@ -1,6 +1,21 @@
-# 🔄 Changelog - Inky Photo Frame v2.0.0
+# 🔄 Changelog - Inky Photo Frame
 
-## 🎉 Version 2.0.0 (2025-01-02)
+## 🎉 Version 1.0.1 (2025-10-24)
+
+### ✨ Official Release - Stable v1.0.1
+
+#### 🔧 Fixes
+- **LED Control**: Fixed ACT LED disable logic using `act_led_activelow=on` for proper shutdown
+- **WiFi Configuration**: Integrated web-based WiFi setup and hotspot fallback
+- **Stability**: Improved GPIO/SPI handling with singleton pattern
+
+#### 📝 Documentation
+- Updated all version references from beta (v2.x) to stable v1.0.1
+- Comprehensive installation and configuration guides
+
+---
+
+## 🎉 Version 2.0.0 (2025-01-02) - Beta
 
 ### 🔴 PROBLÈME 2 : Gestion du Stockage - **RÉSOLU**
 
