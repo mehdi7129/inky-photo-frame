@@ -70,6 +70,11 @@ That's it! The installer handles everything:
 - ✅ Bluetooth configuration
 - ✅ Disables all Raspberry Pi LEDs (no light pollution)
 
+### 🔄 Update to Latest Version
+```bash
+inky-photo-frame update
+```
+
 ## 📱 Upload Photos from Your Phone
 
 ### iPhone / iPad
