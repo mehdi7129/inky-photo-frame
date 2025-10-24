@@ -1,5 +1,25 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🔧 Version 1.1.3 (2025-10-24)
+
+### Improved Dependency Installation
+
+#### Changes
+- **Better error handling**: update.sh now shows clear error messages if dependency installation fails
+- **Verification**: Checks if virtualenv activation succeeds before installing
+- **Feedback**: Shows which dependencies were installed (gpiozero, pillow-heif, watchdog)
+- **Silent errors fixed**: Removed complete output suppression, now uses --quiet flag
+
+#### Technical Details
+- Verifies `~/.virtualenvs/pimoroni/bin/activate` succeeds before pip install
+- Checks pip install exit code and reports failures
+- Uses `--quiet` instead of redirecting to /dev/null for better error visibility
+- Clear success/failure messages for troubleshooting
+
+This improves v1.1.2 by showing why dependency installation might fail.
+
+---
+
 ## 🔧 Version 1.1.2 (2025-10-24)
 
 ### Dependency Installation Fix
