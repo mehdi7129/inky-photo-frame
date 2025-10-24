@@ -1,5 +1,23 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🔧 Version 1.1.2 (2025-10-24)
+
+### Dependency Installation Fix
+
+#### Changes
+- **Auto-install dependencies**: update.sh now automatically installs missing Python dependencies (gpiozero, pillow-heif, watchdog)
+- **Seamless updates**: Button support now activates automatically after update without manual pip install
+
+#### Technical Details
+- Added dependency installation step in update.sh after file downloads
+- Activates pimoroni virtualenv and runs `pip install --upgrade gpiozero pillow-heif watchdog`
+- Silent installation (output redirected to /dev/null)
+- Ensures all features work immediately after update
+
+This fixes the issue where buttons didn't work after updating from v1.0.2 to v1.1.1 because gpiozero wasn't installed.
+
+---
+
 ## 🔧 Version 1.1.1 (2025-10-24)
 
 ### Bug Fix Release

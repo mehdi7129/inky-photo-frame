@@ -96,6 +96,12 @@ if [ -f "$INSTALL_DIR/inky_photo_frame.py" ]; then
     NEW_VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame.py" | cut -d'"' -f2)
 fi
 
+# Install/update Python dependencies
+print_info "Installing Python dependencies..."
+source ~/.virtualenvs/pimoroni/bin/activate
+pip install --upgrade gpiozero pillow-heif watchdog > /dev/null 2>&1
+print_status "Dependencies updated"
+
 # Install CLI command to system
 if [ -f "$INSTALL_DIR/inky-photo-frame-cli" ]; then
     print_info "Installing CLI command..."
