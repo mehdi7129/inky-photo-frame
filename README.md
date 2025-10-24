@@ -9,7 +9,8 @@
 [![GitHub](https://img.shields.io/github/stars/mehdi7129/inky-photo-frame?style=social)](https://github.com/mehdi7129/inky-photo-frame)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi-red)](https://www.raspberrypi.org/)
-[![Display](https://img.shields.io/badge/display-Inky%207.3%13.3%22-purple)](https://shop.pimoroni.com/products/inky-impression-7-3)
+[![Display 7.3"](https://img.shields.io/badge/display-Inky%207.3%22-purple)](https://shop.pimoroni.com/products/inky-impression-7-3)
+[![Display 13.3"](https://img.shields.io/badge/display-Inky%2013.3%22-purple)](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435277179)
 
 [**📥 Quick Install**](#-quick-installation) • [**📱 Phone Setup**](#-upload-photos-from-your-phone) • [**🔧 WiFi Config**](#-wifi-configuration) • [**📖 Full Guide**](INSTALLATION_GUIDE.md)
 
