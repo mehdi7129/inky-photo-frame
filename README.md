@@ -133,8 +133,8 @@ The Pi will automatically connect to the new WiFi network on boot!
 
 - **🖼️ Inky Impression Display** - Any model:
   - [Inky Impression 7.3"](https://shop.pimoroni.com/products/inky-impression-7-3)
-  - [Inky Impression 7.3" (2025 Edition)](https://shop.pimoroni.com/products/inky-impression-7-3-2025](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435244411))
-  - [Inky Impression 13.3" (2025 Edition)](https://shop.pimoroni.com/products/inky-impression-13-3-2025](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435277179))
+  - [Inky Impression 7.3" (2025 Edition)](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435244411))
+  - [Inky Impression 13.3" (2025 Edition)](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435277179))
 - **🥧 Raspberry Pi** - Zero 2W, 3, 4, or 5
 - **🔌 Power Supply** - 5V USB power
 - **💾 SD Card** - 8GB+ recommended
