@@ -1,0 +1,146 @@
+#!/bin/bash
+
+# Inky Photo Frame - CLI Wrapper
+# Provides convenient commands for managing the photo frame
+# Install to: /usr/local/bin/inky-photo-frame
+
+INSTALL_DIR="/home/pi/inky-photo-frame"
+SERVICE_NAME="inky-photo-frame"
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+print_header() {
+    echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║           🖼️  Inky Photo Frame Manager                ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+show_usage() {
+    print_header
+    echo "Usage: inky-photo-frame <command>"
+    echo ""
+    echo "Commands:"
+    echo "  update, -up, --update     Update from GitHub"
+    echo "  status, -s, --status      Show service status"
+    echo "  restart, -r, --restart    Restart the service"
+    echo "  stop                      Stop the service"
+    echo "  start                     Start the service"
+    echo "  logs, -l, --logs          Show live logs"
+    echo "  info, -i, --info          Show system information"
+    echo "  version, -v, --version    Show version"
+    echo "  help, -h, --help          Show this help"
+    echo ""
+    echo "Examples:"
+    echo "  inky-photo-frame update     # Update to latest version"
+    echo "  inky-photo-frame status     # Check if service is running"
+    echo "  inky-photo-frame logs       # Watch live logs"
+}
+
+show_version() {
+    if [ -f "$INSTALL_DIR/inky_photo_frame.py" ]; then
+        VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame.py" | cut -d'"' -f2)
+        echo "Inky Photo Frame v$VERSION"
+    else
+        echo "Version unknown (installation not found)"
+    fi
+}
+
+show_info() {
+    print_header
+    echo -e "${GREEN}System Information:${NC}"
+    echo ""
+
+    # Version
+    if [ -f "$INSTALL_DIR/inky_photo_frame.py" ]; then
+        VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame.py" | cut -d'"' -f2)
+        echo "Version: $VERSION"
+    fi
+
+    # Service status
+    if sudo systemctl is-active --quiet $SERVICE_NAME; then
+        echo -e "Service: ${GREEN}Running ✓${NC}"
+    else
+        echo -e "Service: ${RED}Stopped ✗${NC}"
+    fi
+
+    # Photo count
+    if [ -d "/home/pi/Images" ]; then
+        PHOTO_COUNT=$(find /home/pi/Images -type f \( -name "*.jpg" -o -name "*.png" -o -name "*.heic" \) 2>/dev/null | wc -l)
+        echo "Photos: $PHOTO_COUNT"
+    fi
+
+    # Disk space
+    DISK_USAGE=$(df -h /home/pi | tail -1 | awk '{print $5}')
+    echo "Disk Usage: $DISK_USAGE"
+
+    # IP Address
+    IP_ADDR=$(hostname -I | cut -d' ' -f1)
+    echo "IP Address: $IP_ADDR"
+    echo "SMB Share: smb://$IP_ADDR"
+
+    echo ""
+}
+
+case "$1" in
+    update|-up|--update)
+        if [ -f "$INSTALL_DIR/update.sh" ]; then
+            bash "$INSTALL_DIR/update.sh"
+        else
+            echo -e "${RED}Update script not found${NC}"
+            exit 1
+        fi
+        ;;
+
+    status|-s|--status)
+        sudo systemctl status $SERVICE_NAME --no-pager
+        ;;
+
+    restart|-r|--restart)
+        echo "Restarting Inky Photo Frame..."
+        sudo systemctl restart $SERVICE_NAME
+        echo -e "${GREEN}✅ Service restarted${NC}"
+        ;;
+
+    stop)
+        echo "Stopping Inky Photo Frame..."
+        sudo systemctl stop $SERVICE_NAME
+        echo -e "${GREEN}✅ Service stopped${NC}"
+        ;;
+
+    start)
+        echo "Starting Inky Photo Frame..."
+        sudo systemctl start $SERVICE_NAME
+        echo -e "${GREEN}✅ Service started${NC}"
+        ;;
+
+    logs|-l|--logs)
+        echo "Showing live logs (Ctrl+C to exit)..."
+        echo ""
+        sudo journalctl -u $SERVICE_NAME -f
+        ;;
+
+    info|-i|--info)
+        show_info
+        ;;
+
+    version|-v|--version)
+        show_version
+        ;;
+
+    help|-h|--help|"")
+        show_usage
+        ;;
+
+    *)
+        echo -e "${RED}Unknown command: $1${NC}"
+        echo ""
+        show_usage
+        exit 1
+        ;;
+esac

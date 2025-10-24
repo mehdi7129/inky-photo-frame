@@ -1,0 +1,16 @@
+# Inky Photo Frame Requirements
+# For Raspberry Pi with Inky Impression 7.3"
+
+# Core display library
+inky[rpi,example-depends]>=1.5.0
+
+# Image processing
+Pillow>=10.0.0
+pillow-heif>=0.13.0  # iPhone HEIC support
+
+# File monitoring
+watchdog>=3.0.0
+
+# Optional but recommended
+numpy>=1.24.0  # Better image processing
+requests>=2.31.0  # For future web features
