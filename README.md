@@ -187,7 +187,7 @@ CHANGE_HOUR = 5  # Change daily at this hour (24h format)
 PHOTOS_DIR = Path('/home/pi/Images')  # Photo storage location
 ```
 
-### 🎨 Color Modes (v2.3.0+)
+### 🎨 Color Modes
 
 **Choose the best color rendering for your photos!**
 
@@ -206,7 +206,7 @@ COLOR_MODE = 'spectra_palette'
 ```python
 COLOR_MODE = 'warmth_boost'
 ```
-- Aggressive warmth enhancement (v2.1.5 mode)
+- Aggressive warmth enhancement
 - RGB adjustments: Red +15%, Green -8%, Blue -25%
 - Brightness +12%, Saturation 0.3
 - **Best for**: Portraits, skin tones, warm family photos

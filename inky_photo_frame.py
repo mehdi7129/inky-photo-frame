@@ -4,7 +4,7 @@ Inky Photo Frame - Digital photo frame for Inky Impression 7.3"
 Displays photos from SMB share with immediate display of new photos
 Changes daily at 5AM with intelligent rotation
 
-Version: 2.3.0
+Version: 1.0
 
 Color Management:
 -----------------
@@ -21,7 +21,7 @@ Change COLOR_MODE setting (line 44) to choose color handling:
    - Calibrated palette: R=#a02020, Y=#f0e050, G=#608050, B=#5080b8
    - Best for: Accurate colors on Spectra 6 displays
 
-3. 'warmth_boost' - Aggressive warmth enhancement (v2.1.5)
+3. 'warmth_boost' - Aggressive warmth enhancement
    - Red +15%, Green -8%, Blue -25%
    - Brightness +12%, Saturation 0.3
    - Best for: Warm skin tones, portraits
@@ -54,13 +54,13 @@ HISTORY_FILE = Path('/home/pi/.inky_history.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "2.3.0"
+VERSION = "1.0"
 
 # Color calibration settings for e-ink display
 # COLOR_MODE options:
 #   'pimoroni'        - Official Pimoroni default (saturation 0.5, NO processing)
 #   'spectra_palette' - Direct mapping to calibrated 6-color Spectra palette
-#   'warmth_boost'    - v2.1.5 aggressive RGB warmth adjustments
+#   'warmth_boost'    - Aggressive RGB warmth adjustments
 COLOR_MODE = 'spectra_palette'  # Change this to switch color handling
 
 # Pimoroni defaults
@@ -77,7 +77,7 @@ SPECTRA_PALETTE = {
     'blue':   (0x50, 0x80, 0xb8),  # Much lighter/cyan than #0000FF
 }
 
-# Warmth boost settings (v2.1.5 aggressive mode)
+# Warmth boost settings (aggressive mode)
 WARMTH_BOOST_CONFIG = {
     'red_boost': 1.15,      # +15% red
     'green_reduce': 0.92,   # -8% green
@@ -266,7 +266,7 @@ class InkyPhotoFrame:
             for name, rgb in SPECTRA_PALETTE.items():
                 logging.info(f'   {name}: #{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}')
         elif COLOR_MODE == 'warmth_boost' and self.is_spectra:
-            logging.info('🔥 Using aggressive warmth boost (v2.1.5 mode)')
+            logging.info('🔥 Using aggressive warmth boost mode')
 
         # Register HEIF support if available
         try:
@@ -601,7 +601,7 @@ class InkyPhotoFrame:
 
     def _apply_warmth_boost(self, img):
         """
-        Apply v2.1.5 aggressive warmth boost via RGB channel adjustments.
+        Apply aggressive warmth boost via RGB channel adjustments.
         Boosts red, reduces blue to add warmth to skin tones.
         """
         from PIL import ImageEnhance
@@ -672,9 +672,9 @@ class InkyPhotoFrame:
             logging.info('✨ Applied calibrated Spectra 6-color palette mapping')
 
         elif COLOR_MODE == 'warmth_boost' and self.is_spectra:
-            # v2.1.5 aggressive warmth boost mode
+            # Aggressive warmth boost mode
             img = self._apply_warmth_boost(img)
-            logging.info('🔥 Applied aggressive warmth boost (v2.1.5)')
+            logging.info('🔥 Applied aggressive warmth boost')
 
         else:
             # Fallback: no processing (same as pimoroni mode)
