@@ -1,5 +1,42 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🔧 Version 1.1.5 (2025-10-24)
+
+### Critical Fix: lgpio Support for Modern Raspberry Pi OS
+
+#### Changes
+- **Added lgpio**: Modern GPIO backend required for Raspberry Pi OS Bookworm
+- **GPIO permissions check**: Automatically adds user to gpio group if needed
+- **Installation order**: lgpio installed first, then RPi.GPIO as fallback
+- **Complete compatibility**: Works on all Raspberry Pi models and OS versions
+
+#### Technical Details
+- **Why lgpio?** Modern Raspberry Pi OS (Bookworm with Python 3.13) prefers lgpio over RPi.GPIO
+- **Pin factory hierarchy**: gpiozero tries backends in order: lgpio → RPi.GPIO → NativeFactory
+- **Permission fix**: Ensures user is in gpio group for proper GPIO access
+- **update.sh improvements**:
+  - Installs lgpio with `pip install --upgrade lgpio`
+  - Verifies GPIO group membership
+  - Adds user to gpio group if missing (reboot may be required)
+
+Error fixed:
+```
+PinFactoryFallback: Falling back from lgpio: No module named 'lgpio'
+⚠️ Could not initialize buttons: Failed to add edge detection
+```
+
+After this update, buttons will initialize correctly with:
+```
+✅ Button controller initialized (GPIO 5,6,16,24)
+```
+
+#### Why Both lgpio AND RPi.GPIO?
+- **lgpio**: For modern systems (Pi 5, Pi 4 with Bookworm) - faster, more secure
+- **RPi.GPIO**: Fallback for older systems (Pi Zero, Pi 3 with Bullseye) - legacy support
+- **gpiozero**: High-level abstraction that automatically selects the best available backend
+
+---
+
 ## 🔧 Version 1.1.4 (2025-10-24)
 
 ### Critical Fix: RPi.GPIO Dependency

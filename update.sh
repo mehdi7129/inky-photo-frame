@@ -99,14 +99,27 @@ fi
 # Install/update Python dependencies
 print_info "Installing Python dependencies..."
 if source ~/.virtualenvs/pimoroni/bin/activate 2>/dev/null; then
+    # Install lgpio first (modern GPIO backend for gpiozero)
+    pip install --upgrade lgpio --quiet
+    # Then install other dependencies
     pip install --upgrade RPi.GPIO gpiozero pillow-heif watchdog --quiet
     if [ $? -eq 0 ]; then
-        print_status "Dependencies updated (RPi.GPIO, gpiozero, pillow-heif, watchdog)"
+        print_status "Dependencies updated (lgpio, RPi.GPIO, gpiozero, pillow-heif, watchdog)"
     else
         print_error "Failed to install dependencies"
     fi
 else
     print_error "Could not activate pimoroni virtualenv"
+fi
+
+# Ensure user is in gpio group (required for GPIO access)
+print_info "Checking GPIO permissions..."
+if ! groups $USER | grep -q '\bgpio\b'; then
+    print_info "Adding user to gpio group..."
+    sudo usermod -a -G gpio $USER
+    print_status "User added to gpio group (reboot may be required)"
+else
+    print_status "GPIO permissions OK"
 fi
 
 # Install CLI command to system

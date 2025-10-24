@@ -1,6 +1,17 @@
-# 📋 Résumé des Améliorations v1.1.4
+# 📋 Résumé des Améliorations v1.1.5
 
 ## ✅ Ce qui a été corrigé
+
+### 🔴 Problème : Boutons GPIO ne fonctionnent pas
+- ✅ **lgpio installé** : Backend GPIO moderne pour Raspberry Pi OS Bookworm
+- ✅ **Permissions GPIO** : Ajout automatique au groupe gpio
+- ✅ **Support complet** : lgpio (moderne) + RPi.GPIO (legacy) pour compatibilité maximale
+
+**Résultat** : Les 4 boutons physiques fonctionnent maintenant correctement
+
+---
+
+## ✅ Ce qui a été corrigé (versions précédentes)
 
 ### 🔴 Problème 2 : Gestion du Stockage
 - ✅ **Suppression automatique FIFO** : Max 1000 photos, supprime les plus anciennes
@@ -92,7 +103,7 @@ curl -sSL https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/inst
 ```bash
 # 1. Vérifier la version
 inky-photo-frame version
-# Doit afficher : v1.1.4
+# Doit afficher : v1.1.5
 
 # 2. Vérifier le service
 inky-photo-frame status
@@ -101,8 +112,9 @@ inky-photo-frame status
 # 3. Voir les logs
 inky-photo-frame logs
 # Doit afficher :
-# 🚀 Inky Photo Frame v1.1.4
+# 🚀 Inky Photo Frame v1.1.5
 # ✅ Display initialized: 800x480
+# ✅ Button controller initialized (GPIO 5,6,16,24)
 # 🗄️ Storage limit: 1000 photos (auto-cleanup enabled)
 ```
 

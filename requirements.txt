@@ -12,7 +12,8 @@ pillow-heif>=0.13.0  # iPhone HEIC support
 watchdog>=3.0.0
 
 # GPIO button support
-RPi.GPIO>=0.7.0
+lgpio>=0.2.0  # Modern GPIO backend (recommended for Raspberry Pi OS Bookworm)
+RPi.GPIO>=0.7.0  # Legacy GPIO backend (fallback)
 gpiozero>=2.0.0
 
 # Optional but recommended
