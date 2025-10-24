@@ -1,5 +1,19 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🎉 Version 1.0.2 (2025-10-24)
+
+### 🧹 Cleanup Release
+
+#### Changes
+- **Removed Bluetooth**: Completely removed deprecated Bluetooth WiFi configuration feature
+- **Removed bluetooth_wifi_smart.py**: Cleaned up old test version files
+- **Documentation**: Updated all guides to remove Bluetooth references
+- **Update Command**: Added `inky-photo-frame update` documentation to README
+
+This version removes all traces of the experimental Bluetooth configuration system.
+
+---
+
 ## 🎉 Version 1.0.1 (2025-10-24)
 
 ### ✨ Official Release - Stable v1.0.1
