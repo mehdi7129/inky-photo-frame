@@ -80,6 +80,28 @@ Après l'installation, l'écran affiche les instructions de connexion avec :
 - Ajustement du contraste pour e-ink
 - Traitement des images portrait/paysage
 
+## 🎮 Contrôles Physiques (Boutons)
+
+L'Inky Impression dispose de **4 boutons physiques** sur le côté pour un contrôle interactif :
+
+| Bouton | Position | Fonction |
+|--------|----------|----------|
+| **A** | Haut | ⏭️ Photo suivante |
+| **B** | | ⏮️ Photo précédente |
+| **C** | | 🎨 Cycle modes couleur |
+| **D** | Bas | 🔄 Reset mode pimoroni |
+
+### Modes de couleur disponibles
+1. **pimoroni** (par défaut) - Rendu standard Pimoroni
+2. **spectra_palette** - Palette calibrée 6 couleurs pour Spectra
+3. **warmth_boost** - Boost chaleur agressif pour tons chauds
+
+### Caractéristiques
+- ✅ Aucun message affiché - actions silencieuses
+- ✅ Boutons verrouillés pendant l'affichage (~30-40s)
+- ✅ Préférence de couleur sauvegardée et persistante
+- ✅ Navigation sans smartphone
+
 ## 🛠 Commandes Utiles
 
 ```bash

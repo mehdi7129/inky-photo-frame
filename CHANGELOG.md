@@ -1,5 +1,37 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🎉 Version 1.1.0 (2025-10-24)
+
+### 🎮 Physical Button Controls - Interactive Photo Frame
+
+#### New Features
+- **Physical Button Support**: Added GPIO button controls for interactive navigation
+  - **Button A** (GPIO 5): Next photo
+  - **Button B** (GPIO 6): Previous photo
+  - **Button C** (GPIO 16): Cycle through color modes
+  - **Button D** (GPIO 24): Reset to pimoroni default mode
+
+- **Dynamic Color Mode Switching**: Color modes can now be changed at runtime via buttons
+  - Cycle between: pimoroni → spectra_palette → warmth_boost
+  - Color preference is saved and persists across reboots
+
+- **Navigation Controls**: Browse your photo collection with physical buttons
+  - Navigate forward/backward through photos
+  - No need to wait for 5AM daily rotation
+  - No need to upload new photos to change display
+
+#### Technical Implementation
+- ButtonController class with 20ms debouncing using gpiozero
+- Busy flag lock mechanism prevents button presses during e-ink refresh
+- Color mode persistence via `/home/pi/.inky_color_mode.json`
+- Silent operation - no messages displayed to user
+- Thread-safe button handling with existing lock system
+
+#### Requirements
+- `gpiozero` library (automatically included with Raspberry Pi OS)
+
+---
+
 ## 🎉 Version 1.0.2 (2025-10-24)
 
 ### 🧹 Cleanup Release

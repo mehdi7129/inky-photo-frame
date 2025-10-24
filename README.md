@@ -54,6 +54,24 @@ The software uses the official [Pimoroni Inky library](https://github.com/pimoro
 | 📱 **Universal** | Works with iPhone, Android, any smartphone |
 | 🖼️ **HEIC Support** | Native support for modern phone formats |
 | ✂️ **Smart Cropping** | Automatic optimization for e-ink |
+| 🎮 **Physical Buttons** | 4 buttons for navigation and color control |
+
+## 🎮 Physical Button Controls
+
+The Inky Impression has 4 physical buttons on the side for interactive control:
+
+| Button | Location | Function |
+|--------|----------|----------|
+| **A** | Top | ⏭️ Next photo |
+| **B** | | ⏮️ Previous photo |
+| **C** | | 🎨 Cycle color modes (pimoroni → spectra_palette → warmth_boost) |
+| **D** | Bottom | 🔄 Reset to pimoroni default mode |
+
+**Features:**
+- No messages displayed - actions happen silently
+- Buttons are locked during photo display (~30-40s e-ink refresh)
+- Color mode preference is saved and persists across reboots
+- Navigate through your photo collection without using your phone
 
 ## 🚀 Quick Installation
 

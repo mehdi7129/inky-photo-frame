@@ -11,6 +11,9 @@ pillow-heif>=0.13.0  # iPhone HEIC support
 # File monitoring
 watchdog>=3.0.0
 
+# GPIO button support
+gpiozero>=2.0.0
+
 # Optional but recommended
 numpy>=1.24.0  # Better image processing
 requests>=2.31.0  # For future web features

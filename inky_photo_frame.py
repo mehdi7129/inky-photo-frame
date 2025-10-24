@@ -4,7 +4,7 @@ Inky Photo Frame - Digital photo frame for Inky Impression 7.3"
 Displays photos from SMB share with immediate display of new photos
 Changes daily at 5AM with intelligent rotation
 
-Version: 1.0.2
+Version: 1.1.0
 
 Color Management:
 -----------------
@@ -47,21 +47,24 @@ import subprocess
 import atexit
 import signal
 from functools import wraps
+from gpiozero import Button
 
 # Configuration
 PHOTOS_DIR = Path('/home/pi/Images')
 HISTORY_FILE = Path('/home/pi/.inky_history.json')
+COLOR_MODE_FILE = Path('/home/pi/.inky_color_mode.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
-VERSION = "1.0.2"
+VERSION = "1.1.0"
 
 # Color calibration settings for e-ink display
 # COLOR_MODE options:
 #   'pimoroni'        - Official Pimoroni default (saturation 0.5, NO processing)
 #   'spectra_palette' - Direct mapping to calibrated 6-color Spectra palette
 #   'warmth_boost'    - Aggressive RGB warmth adjustments
-COLOR_MODE = 'spectra_palette'  # Change this to switch color handling
+# NOTE: COLOR_MODE is now dynamically changeable at runtime via buttons or methods
+COLOR_MODE = 'spectra_palette'  # Default color mode (can be changed at runtime)
 
 # Pimoroni defaults
 SATURATION = 0.5  # Pimoroni default saturation (matches official behavior)
@@ -193,6 +196,79 @@ def retry_on_error(max_attempts=3, delay=1, backoff=2):
         return wrapper
     return decorator
 
+# ============================================================================
+# BUTTON CONTROLLER - GPIO button handling for photo frame control
+# ============================================================================
+
+class ButtonController:
+    """
+    Handles 4 GPIO buttons for photo frame control
+    - Button A (GPIO 5): Next photo
+    - Button B (GPIO 6): Previous photo
+    - Button C (GPIO 16): Cycle color modes
+    - Button D (GPIO 24): Reset to pimoroni mode
+    """
+    def __init__(self, photo_frame):
+        self.photo_frame = photo_frame
+        self.busy = False  # Lock mechanism to prevent button presses during display
+
+        # Initialize buttons with 20ms debouncing
+        try:
+            self.button_a = Button(5, bounce_time=0.02)  # Next photo
+            self.button_b = Button(6, bounce_time=0.02)  # Previous photo
+            self.button_c = Button(16, bounce_time=0.02)  # Cycle color mode
+            self.button_d = Button(24, bounce_time=0.02)  # Reset color mode
+
+            # Attach handlers
+            self.button_a.when_pressed = self._on_button_a
+            self.button_b.when_pressed = self._on_button_b
+            self.button_c.when_pressed = self._on_button_c
+            self.button_d.when_pressed = self._on_button_d
+
+            logging.info('✅ Button controller initialized (GPIO 5,6,16,24)')
+        except Exception as e:
+            logging.warning(f'⚠️ Could not initialize buttons: {e}')
+
+    def _on_button_a(self):
+        """Button A: Next photo"""
+        if not self.busy:
+            self.busy = True
+            try:
+                self.photo_frame.next_photo()
+            finally:
+                self.busy = False
+
+    def _on_button_b(self):
+        """Button B: Previous photo"""
+        if not self.busy:
+            self.busy = True
+            try:
+                self.photo_frame.previous_photo()
+            finally:
+                self.busy = False
+
+    def _on_button_c(self):
+        """Button C: Cycle color modes"""
+        if not self.busy:
+            self.busy = True
+            try:
+                self.photo_frame.cycle_color_mode()
+            finally:
+                self.busy = False
+
+    def _on_button_d(self):
+        """Button D: Reset to pimoroni mode"""
+        if not self.busy:
+            self.busy = True
+            try:
+                self.photo_frame.reset_color_mode()
+            finally:
+                self.busy = False
+
+# ============================================================================
+# PHOTO HANDLER - File system event handler for new photos
+# ============================================================================
+
 class PhotoHandler(FileSystemEventHandler):
     """Handler for new photo files"""
     def __init__(self, slideshow):
@@ -256,16 +332,19 @@ class InkyPhotoFrame:
         self.display = self.display_manager.initialize()
         self.width, self.height = self.display.resolution
 
+        # Load saved color mode preference (must be before detect_display_saturation)
+        self.color_mode = self.load_color_mode()
+
         # Detect display model and optimize saturation
         self.saturation = self.detect_display_saturation()
-        logging.info(f'🎨 Color mode: {COLOR_MODE}')
+        logging.info(f'🎨 Color mode: {self.color_mode}')
         logging.info(f'🎨 Display-specific saturation: {self.saturation}')
 
-        if COLOR_MODE == 'spectra_palette' and self.is_spectra:
+        if self.color_mode == 'spectra_palette' and self.is_spectra:
             logging.info('🎨 Using calibrated Spectra 6-color palette:')
             for name, rgb in SPECTRA_PALETTE.items():
                 logging.info(f'   {name}: #{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}')
-        elif COLOR_MODE == 'warmth_boost' and self.is_spectra:
+        elif self.color_mode == 'warmth_boost' and self.is_spectra:
             logging.info('🔥 Using aggressive warmth boost mode')
 
         # Register HEIF support if available
@@ -287,6 +366,9 @@ class InkyPhotoFrame:
 
         # Storage management - cleanup old photos periodically
         self.last_cleanup = datetime.now()
+
+        # Initialize button controller
+        self.button_controller = ButtonController(self)
 
     def detect_display_saturation(self):
         """
@@ -311,7 +393,7 @@ class InkyPhotoFrame:
             self.is_spectra = False
 
         # Return saturation based on color mode
-        if COLOR_MODE == 'warmth_boost':
+        if self.color_mode == 'warmth_boost':
             return WARMTH_BOOST_CONFIG['saturation']
         return SATURATION
 
@@ -661,17 +743,17 @@ class InkyPhotoFrame:
         img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
 
         # Apply color mode processing
-        if COLOR_MODE == 'pimoroni':
+        if self.color_mode == 'pimoroni':
             # Pimoroni default: NO processing, let Inky library handle everything
             # This matches official Pimoroni behavior (just saturation=0.5 in set_image)
             logging.debug('Applied Pimoroni default (no processing)')
 
-        elif COLOR_MODE == 'spectra_palette' and self.is_spectra:
+        elif self.color_mode == 'spectra_palette' and self.is_spectra:
             # Spectra palette mode: map to calibrated 6-color palette
             img = self._apply_spectra_palette(img)
             logging.info('✨ Applied calibrated Spectra 6-color palette mapping')
 
-        elif COLOR_MODE == 'warmth_boost' and self.is_spectra:
+        elif self.color_mode == 'warmth_boost' and self.is_spectra:
             # Aggressive warmth boost mode
             img = self._apply_warmth_boost(img)
             logging.info('🔥 Applied aggressive warmth boost')
@@ -787,6 +869,118 @@ class InkyPhotoFrame:
         logging.info(f'Photos - Shown: {len(self.history["shown"])}, Pending: {len(self.history["pending"])}')
 
         return success
+
+    def next_photo(self):
+        """Display next photo (triggered by button A)"""
+        self.refresh_pending_list()
+
+        if not self.history['pending']:
+            logging.info('No more photos available')
+            return False
+
+        with self.lock:
+            # Pick next photo from pending
+            next_photo = self.history['pending'].pop(0)
+
+            # Move current to shown (if exists)
+            if self.history['current']:
+                self.history['shown'].append(self.history['current'])
+
+            # Set new current
+            self.history['current'] = next_photo
+
+        # Display the photo
+        success = self.display_photo(next_photo)
+
+        # Save history
+        self.save_history()
+
+        return success
+
+    def previous_photo(self):
+        """Display previous photo (triggered by button B)"""
+        with self.lock:
+            if not self.history['shown']:
+                logging.info('No previous photos available')
+                return False
+
+            # Get last shown photo
+            prev_photo = self.history['shown'].pop()
+
+            # Move current back to pending (at front)
+            if self.history['current']:
+                self.history['pending'].insert(0, self.history['current'])
+
+            # Set previous as current
+            self.history['current'] = prev_photo
+
+        # Display the photo
+        success = self.display_photo(prev_photo)
+
+        # Save history
+        self.save_history()
+
+        return success
+
+    def cycle_color_mode(self):
+        """Cycle through color modes: pimoroni -> spectra_palette -> warmth_boost -> pimoroni"""
+        modes = ['pimoroni', 'spectra_palette', 'warmth_boost']
+        current_index = modes.index(self.color_mode) if self.color_mode in modes else 0
+        next_index = (current_index + 1) % len(modes)
+        self.color_mode = modes[next_index]
+
+        # Update saturation based on new color mode
+        if self.color_mode == 'warmth_boost':
+            self.saturation = WARMTH_BOOST_CONFIG['saturation']
+        else:
+            self.saturation = SATURATION
+
+        # Save the new color mode
+        self.save_color_mode()
+
+        # Re-display current photo with new color mode
+        if self.history['current']:
+            self.display_photo(self.history['current'])
+
+        return True
+
+    def reset_color_mode(self):
+        """Reset to pimoroni color mode (triggered by button D)"""
+        self.color_mode = 'pimoroni'
+        self.saturation = SATURATION
+
+        # Save the color mode
+        self.save_color_mode()
+
+        # Re-display current photo with pimoroni mode
+        if self.history['current']:
+            self.display_photo(self.history['current'])
+
+        return True
+
+    def load_color_mode(self):
+        """Load saved color mode from file"""
+        if COLOR_MODE_FILE.exists():
+            try:
+                with open(COLOR_MODE_FILE, 'r') as f:
+                    data = json.load(f)
+                    color_mode = data.get('color_mode', COLOR_MODE)
+                    logging.info(f'Loaded saved color mode: {color_mode}')
+                    return color_mode
+            except Exception as e:
+                logging.warning(f'Could not load color mode: {e}')
+                return COLOR_MODE
+        else:
+            return COLOR_MODE
+
+    def save_color_mode(self):
+        """Save current color mode to file"""
+        try:
+            with open(COLOR_MODE_FILE, 'w') as f:
+                json.dump({'color_mode': self.color_mode}, f, indent=2)
+            logging.info(f'Saved color mode: {self.color_mode}')
+        except Exception as e:
+            logging.error(f'Error saving color mode: {e}')
 
     def should_change_photo(self):
         """Check if it's time for daily photo change"""
