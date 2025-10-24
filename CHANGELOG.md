@@ -1,5 +1,34 @@
 # 🔄 Changelog - Inky Photo Frame
 
+## 🔧 Version 1.1.4 (2025-10-24)
+
+### Critical Fix: RPi.GPIO Dependency
+
+#### Changes
+- **Added RPi.GPIO**: Required dependency for gpiozero to work on Raspberry Pi
+- **Fixed button initialization**: Buttons now work correctly without "[Errno 22] Invalid argument" error
+- **Complete dependencies**: update.sh, install.sh, and requirements.txt now include RPi.GPIO
+
+#### Technical Details
+- gpiozero requires RPi.GPIO to access GPIO pins on Raspberry Pi
+- Without RPi.GPIO, gpiozero falls back to experimental NativeFactory which fails
+- Added `RPi.GPIO>=0.7.0` to requirements.txt
+- update.sh now installs: RPi.GPIO, gpiozero, pillow-heif, watchdog
+- install.sh now includes RPi.GPIO in initial setup
+
+Error fixed:
+```
+NativePinFactoryFallback: Falling back to the experimental pin factory NativeFactory...
+⚠️ Could not initialize buttons: [Errno 22] Invalid argument
+```
+
+After this update, buttons will initialize correctly with:
+```
+✅ Button controller initialized (GPIO 5,6,16,24)
+```
+
+---
+
 ## 🔧 Version 1.1.3 (2025-10-24)
 
 ### Improved Dependency Installation

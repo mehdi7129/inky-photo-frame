@@ -99,9 +99,9 @@ fi
 # Install/update Python dependencies
 print_info "Installing Python dependencies..."
 if source ~/.virtualenvs/pimoroni/bin/activate 2>/dev/null; then
-    pip install --upgrade gpiozero pillow-heif watchdog --quiet
+    pip install --upgrade RPi.GPIO gpiozero pillow-heif watchdog --quiet
     if [ $? -eq 0 ]; then
-        print_status "Dependencies updated (gpiozero, pillow-heif, watchdog)"
+        print_status "Dependencies updated (RPi.GPIO, gpiozero, pillow-heif, watchdog)"
     else
         print_error "Failed to install dependencies"
     fi

@@ -12,6 +12,7 @@ pillow-heif>=0.13.0  # iPhone HEIC support
 watchdog>=3.0.0
 
 # GPIO button support
+RPi.GPIO>=0.7.0
 gpiozero>=2.0.0
 
 # Optional but recommended
