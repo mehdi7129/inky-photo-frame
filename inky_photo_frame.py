@@ -79,6 +79,9 @@ VERSION = "1.1.7"
 # NOTE: COLOR_MODE is now dynamically changeable at runtime via buttons or methods
 COLOR_MODE = 'spectra_palette'  # Default color mode (can be changed at runtime)
 
+# Setting for displaying original photos with padding
+SHOULD_CROP = False
+
 # Pimoroni defaults
 SATURATION = 0.5  # Pimoroni default saturation (matches official behavior)
 
@@ -827,23 +830,26 @@ class InkyPhotoFrame:
             else:
                 img = img.convert('RGB')
 
-        # Smart crop to display ratio
-        img_ratio = img.width / img.height
-        display_ratio = self.width / self.height
+        if SHOULD_CROP:
+            # Smart crop to display ratio
+            img_ratio = img.width / img.height
+            display_ratio = self.width / self.height
 
-        if img_ratio > display_ratio:
-            # Image wider - crop horizontally (keep center)
-            new_width = int(img.height * display_ratio)
-            left = (img.width - new_width) // 2
-            img = img.crop((left, 0, left + new_width, img.height))
+            if img_ratio > display_ratio:
+                # Image wider - crop horizontally (keep center)
+                new_width = int(img.height * display_ratio)
+                left = (img.width - new_width) // 2
+                img = img.crop((left, 0, left + new_width, img.height))
+            else:
+                # Image taller - crop vertically (bias towards top for portraits)
+                new_height = int(img.width / display_ratio)
+                top = (img.height - new_height) // 3
+                img = img.crop((0, top, img.width, top + new_height))
+
+            # Resize to display size
+            img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
         else:
-            # Image taller - crop vertically (bias towards top for portraits)
-            new_height = int(img.width / display_ratio)
-            top = (img.height - new_height) // 3
-            img = img.crop((0, top, img.width, top + new_height))
-
-        # Resize to display size
-        img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
+            img = ImageOps.contain(img, (self.width, self.height), Image.Resampling.LANCZOS)
 
         # Apply color mode processing
         if self.color_mode == 'pimoroni':
