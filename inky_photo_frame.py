@@ -849,7 +849,7 @@ class InkyPhotoFrame:
             # Resize to display size
             img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
         else:
-            img = ImageOps.pad(img, (self.width, self.height), Image.Resampling.LANCZOS)
+            img = ImageOps.pad(img, (self.width, self.height), Image.Resampling.LANCZOS, color='white')
 
         # Apply color mode processing
         if self.color_mode == 'pimoroni':
