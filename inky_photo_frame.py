@@ -66,7 +66,7 @@ PHOTOS_DIR = Path('/home/pi/Images')
 IMMICH_PHOTOS_DIR = PHOTOS_DIR.joinpath('immich')
 HISTORY_FILE = Path('/home/pi/.inky_history.json')
 COLOR_MODE_FILE = Path('/home/pi/.inky_color_mode.json')
-CHANGE_HOUR = 5  # Daily change hour (5AM)
+CHANGE_HOUR = 7  # Daily change hour (7AM)
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
 VERSION = "1.1.7"
@@ -189,7 +189,6 @@ class ImmichApiManager:
         except Exception as e:
             logging.error(f'An error occurred refreshing assets in album {self._display_album_id}', e)
 
-
 # ============================================================================
 # DISPLAY MANAGER - Singleton pattern for robust GPIO/SPI management
 # ============================================================================
@@ -225,11 +224,6 @@ class DisplayManager:
 
                 width, height = self._display.resolution
                 logging.info(f'✅ Display initialized: {width}x{height}')
-
-                # Register cleanup handlers
-                atexit.register(self.cleanup)
-                signal.signal(signal.SIGTERM, lambda s, f: self.cleanup())
-                signal.signal(signal.SIGINT, lambda s, f: self.cleanup())
 
                 return self._display
 
@@ -418,6 +412,8 @@ class PhotoHandler(FileSystemEventHandler):
 
 class InkyPhotoFrame:
     def __init__(self):
+        self.is_running = True
+
         # Immich api manager
         self.immich_manager = ImmichApiManager()
 
@@ -1106,8 +1102,7 @@ class InkyPhotoFrame:
         # if now.hour >= CHANGE_HOUR and last_change.date() < now.date():
         #     return True
 
-        # Every 2 hours after 5 am?
-        if now.hour >= CHANGE_HOUR and last_change <= now - timedelta(hours=2):
+        if now.hour >= CHANGE_HOUR and now - last_change >= timedelta(hours=1):
             return True
         return False
 
@@ -1137,6 +1132,7 @@ class InkyPhotoFrame:
         """Main loop with file watching"""
         logging.info(f'⏰ Daily change time: {CHANGE_HOUR:02d}:00')
         logging.info(f'📁 Watching folder: {PHOTOS_DIR}')
+        logging.info(f'📁 Watching folder: {IMMICH_PHOTOS_DIR}')
         logging.info(f'🗄️ Storage limit: {MAX_PHOTOS} photos (auto-cleanup enabled)')
 
         # Display current or welcome screen
@@ -1151,9 +1147,10 @@ class InkyPhotoFrame:
 
         try:
             # Main loop
-            while True:
+            while self.is_running:
+                print("looping")
                 # Check every minute
-                time_module.sleep(60)
+                time_module.sleep(30)
 
                 # Check for daily change
                 if self.should_change_photo():
@@ -1188,13 +1185,26 @@ class InkyPhotoFrame:
 
         except KeyboardInterrupt:
             logging.info('👋 Stopping photo frame')
-            observer.stop()
         except Exception as e:
             logging.error(f'❌ Error in main loop: {e}')
+        finally:
             observer.stop()
 
         observer.join()
 
+    def register_cleanup_handlers(self):
+        # Register cleanup handlers
+        atexit.register(self.dispose)
+        signal.signal(signal.SIGTERM, lambda s, f: self.dispose())
+        signal.signal(signal.SIGINT, lambda s, f: self.dispose())
+
+    def dispose(self):
+        with self.lock:
+            self.display_manager.cleanup()
+            self.is_running = False
+
+
 if __name__ == '__main__':
     frame = InkyPhotoFrame()
+    frame.register_cleanup_handlers()
     frame.run()
