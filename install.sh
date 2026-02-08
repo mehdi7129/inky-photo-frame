@@ -22,6 +22,7 @@ SMB_SHARE_NAME="Images"
 PHOTOS_DIR="/home/pi/Images"
 INSTALL_DIR="/home/pi/inky-photo-frame"
 PASSWORD_FILE="/home/pi/.inky_credentials"
+IMMICH_CONFIG_FILE="/home/pi/.immich_config"
 
 # Colors for output
 RED='\033[0;31m'
@@ -150,7 +151,7 @@ pip install inky[rpi,example-depends]
 
 # STEP 8: Install additional Python packages
 print_info "STEP 8: Installing Python dependencies..."
-pip install pillow pillow-heif watchdog lgpio RPi.GPIO gpiozero
+pip install pillow pillow-heif watchdog lgpio RPi.GPIO gpiozero pydantic urllib3 python_dateutil
 
 # STEP 9: Create installation directory
 print_info "STEP 9: Creating application directory..."
@@ -170,7 +171,7 @@ FILES_TO_DOWNLOAD=(
 # Always download from GitHub for consistency
 for file in "${FILES_TO_DOWNLOAD[@]}"; do
     print_info "Downloading $file..."
-    curl -sSL -o $INSTALL_DIR/$file https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/$file
+    curl -sSL -o $INSTALL_DIR/$file https://raw.githubusercontent.com/bartoszs321/inky-photo-frame/feat/immich-album-sync/$file
     if [ $? -ne 0 ]; then
         print_error "Failed to download $file"
         exit 1
@@ -235,6 +236,15 @@ echo "$USER_NAME" | sudo tee "$PASSWORD_FILE" > /dev/null
 echo "$USER_PASSWORD" | sudo tee -a "$PASSWORD_FILE" > /dev/null
 sudo chmod 644 "$PASSWORD_FILE"
 print_status "Credentials saved to $PASSWORD_FILE"
+
+read -p "Enter Immich url: " immich_url
+read -p "Enter Immich api_key: " immich_api_key
+read -p "Enter Immich album id for syncing: " immich_album_id
+echo "$immich_url" | sudo tee "$IMMICH_CONFIG_FILE" > /dev/null
+echo "$immich_api_key" | sudo tee -a "$IMMICH_CONFIG_FILE" > /dev/null
+echo "$immich_album_id" | sudo tee -a "$IMMICH_CONFIG_FILE" > /dev/null
+
+print_info "Saving immich configuration"
 
 # Restart Samba
 print_info "Restarting SMB service..."

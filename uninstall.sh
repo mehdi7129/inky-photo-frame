@@ -44,8 +44,8 @@ sudo sed -i '/\[InkyPhotos\]/,/^$/d' /etc/samba/smb.conf
 sudo systemctl restart smbd
 
 # Remove application files
-print_info "Suppression des fichiers de l'application..."
-rm -rf /home/pi/inky-photo-frame
+#print_info "Suppression des fichiers de l'application..."
+#rm -rf /home/pi/inky-photo-frame
 
 # Keep photos and history
 print_info "Conservation des photos et de l'historique..."

@@ -26,8 +26,10 @@ Change COLOR_MODE setting (line 44) to choose color handling:
    - Brightness +12%, Saturation 0.3
    - Best for: Warm skin tones, portraits
 """
-
+import io
 import os
+from uuid import UUID
+
 # Set environment variable to skip GPIO check
 os.environ['INKY_SKIP_GPIO_CHECK'] = '1'
 import json
@@ -47,6 +49,10 @@ import subprocess
 import atexit
 import signal
 from functools import wraps
+from os import listdir
+from os.path import isfile, join
+
+import immich_api_client
 
 # Optional GPIO button support
 try:
@@ -57,6 +63,7 @@ except ImportError:
 
 # Configuration
 PHOTOS_DIR = Path('/home/pi/Images')
+IMMICH_PHOTOS_DIR = PHOTOS_DIR.joinpath('immich')
 HISTORY_FILE = Path('/home/pi/.inky_history.json')
 COLOR_MODE_FILE = Path('/home/pi/.inky_color_mode.json')
 CHANGE_HOUR = 5  # Daily change hour (5AM)
@@ -104,6 +111,81 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
+
+# ============================================================================
+# Immich API MANAGER - Fetches photos from a specified album and saves them to the photo dir
+# ============================================================================
+
+class ImmichApiManager:
+    _api_client = None
+    _albums_api = None
+    _assets_api = None
+    _display_album_id = None
+    _downloaded_images = None
+
+    def __init__(self):
+        logging.info('🎞️ Starting Immich API Manager')
+
+        host_url, api_key, album_id = self.get_immich_config()
+        self._display_album_id = album_id
+
+        config = immich_api_client.Configuration(host=f"{host_url}/api")
+        config.api_key["api_key"] = api_key
+        self._api_client = immich_api_client.ApiClient(config)
+
+        self._albums_api = immich_api_client.AlbumsApi(self._api_client)
+        self._asset_api = immich_api_client.AssetsApi(self._api_client)
+
+        # list all images inside immich dir to get uuids
+        image_files = [Path(f).stem for f in listdir(IMMICH_PHOTOS_DIR) if isfile(join(IMMICH_PHOTOS_DIR, f)) and f.endswith('.jpg')]
+
+        logging.info(f'🎞️ Found {len(image_files)} existing images')
+
+        self._downloaded_images = set(image_files)
+        logging.info('🎞️ Started Immich API Manager')
+
+    def get_immich_config(self):
+        """Read api_key from credentials file"""
+        try:
+            cred_file = Path("/home/pi/.immich_config")
+            if cred_file.exists():
+                lines = cred_file.read_text().strip().split('\n')
+                if len(lines) >= 3:
+                    return lines[0], lines[1], lines[2]  # host_addr, api_key, album_id
+        except Exception as e:
+            logging.warning(f"Could not read credentials file: {e}")
+        # Fallback to default values
+        return "immich", "album"
+
+    def update_downloaded_assets(self):
+        try:
+            logging.info(f'🎞️ Fetching asset list from Immich album: {self._display_album_id}')
+
+            album_info = self._albums_api.get_album_info(UUID(self._display_album_id), without_assets=False)
+
+            album_asset_ids = set([a.id for a in album_info.assets])
+            new_asset_ids = album_asset_ids.difference(self._downloaded_images)
+            deleted_assets_ids = self._downloaded_images.difference(album_asset_ids)
+            logging.info(f'🎞️ Found {len(new_asset_ids)} assets to download')
+            logging.info(f'🎞️ Found {len(deleted_assets_ids)} assets to delete')
+
+            for deleted_id in deleted_assets_ids:
+                image_path = IMMICH_PHOTOS_DIR.joinpath(deleted_id + ".jpg")
+                image_path.unlink()
+
+            for asset_id in new_asset_ids:
+                try:
+                    photo_bytes = self._asset_api.view_asset(UUID(asset_id), size=immich_api_client.AssetMediaSize.PREVIEW)
+                    image = Image.open(io.BytesIO(photo_bytes))
+                    image_path = IMMICH_PHOTOS_DIR.joinpath(asset_id + ".jpg")
+                    image.save(image_path)
+                except Exception as e:
+                    logging.error(f'An error occurred downloading asset {asset_id}', e)
+            logging.info(f'🎞️ Asset update complete')
+
+        except Exception as e:
+            logging.error(f'An error occurred refreshing assets in album {self._display_album_id}', e)
+
 
 # ============================================================================
 # DISPLAY MANAGER - Singleton pattern for robust GPIO/SPI management
@@ -333,6 +415,9 @@ class PhotoHandler(FileSystemEventHandler):
 
 class InkyPhotoFrame:
     def __init__(self):
+        # Immich api manager
+        self.immich_manager = ImmichApiManager()
+
         # Use DisplayManager singleton for robust GPIO/SPI handling
         self.display_manager = DisplayManager()
         self.display = self.display_manager.initialize()
@@ -363,6 +448,7 @@ class InkyPhotoFrame:
 
         # Create photos directory if not exists
         PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
+        IMMICH_PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
 
         # Load or create history
         self.history = self.load_history()
@@ -548,7 +634,7 @@ class InkyPhotoFrame:
                      '*.JPG', '*.JPEG', '*.PNG', '*.BMP']
         photos = []
         for ext in extensions:
-            photos.extend(PHOTOS_DIR.glob(ext))
+            photos.extend(PHOTOS_DIR.rglob(ext))
 
         # Convert to string paths
         return [str(p) for p in photos]
@@ -622,6 +708,9 @@ class InkyPhotoFrame:
     def refresh_pending_list(self):
         """Update pending list with new photos"""
         with self.lock:
+            # Check if new photos available in selected immich album
+            self.immich_manager.update_downloaded_assets()
+
             all_photos = self.get_all_photos()
 
             # Remove deleted photos from history
@@ -1005,12 +1094,15 @@ class InkyPhotoFrame:
             return True
 
         # Parse last change time
-        last_change = datetime.fromisoformat(self.history['last_change'])
+        last_change: datetime = datetime.fromisoformat(self.history['last_change'])
 
         # Check if it's past CHANGE_HOUR and we haven't changed today
-        if now.hour >= CHANGE_HOUR and last_change.date() < now.date():
-            return True
+        # if now.hour >= CHANGE_HOUR and last_change.date() < now.date():
+        #     return True
 
+        # Every 2 hours after 5 am?
+        if now.hour >= CHANGE_HOUR and last_change <= now - timedelta(hours=2):
+            return True
         return False
 
     def display_current_or_change(self):
@@ -1047,7 +1139,7 @@ class InkyPhotoFrame:
         # Setup file watcher
         event_handler = PhotoHandler(self)
         observer = Observer()
-        observer.schedule(event_handler, str(PHOTOS_DIR), recursive=False)
+        observer.schedule(event_handler, str(PHOTOS_DIR), recursive=True)
         observer.start()
         logging.info('📸 File watcher started - new photos will display immediately!')
 

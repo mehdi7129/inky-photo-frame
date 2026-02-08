@@ -19,3 +19,9 @@ gpiozero>=2.0.0
 # Optional but recommended
 numpy>=1.24.0  # Better image processing
 requests>=2.31.0  # For future web features
+
+# Generated api client
+urllib3 >= 2.1.0, < 3.0.0
+python_dateutil >= 2.8.2
+pydantic >= 2
+typing-extensions >= 4.7.1
