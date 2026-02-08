@@ -412,7 +412,8 @@ class PhotoHandler(FileSystemEventHandler):
 
 class InkyPhotoFrame:
     def __init__(self):
-        self.is_running = True
+        # self.is_running = True
+        self._should_quit = threading.Event()
 
         # Immich api manager
         self.immich_manager = ImmichApiManager()
@@ -1147,10 +1148,11 @@ class InkyPhotoFrame:
 
         try:
             # Main loop
-            while self.is_running:
+            while not self._should_quit.is_set():
                 print("looping")
                 # Check every minute
-                time_module.sleep(30)
+                # time_module.sleep(60)
+                self._should_quit.wait(60)
 
                 # Check for daily change
                 if self.should_change_photo():
@@ -1185,10 +1187,13 @@ class InkyPhotoFrame:
 
         except KeyboardInterrupt:
             logging.info('👋 Stopping photo frame')
+            self._should_quit.set()
         except Exception as e:
             logging.error(f'❌ Error in main loop: {e}')
+            self._should_quit.set()
         finally:
             observer.stop()
+            self._should_quit.clear()
 
         observer.join()
 
@@ -1201,8 +1206,8 @@ class InkyPhotoFrame:
     def dispose(self):
         with self.lock:
             self.display_manager.cleanup()
-            self.is_running = False
-
+            # self.is_running = False
+            self._should_quit.set()
 
 if __name__ == '__main__':
     frame = InkyPhotoFrame()
