@@ -70,30 +70,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HYGN-01 | TBD | Pending |
-| HYGN-02 | TBD | Pending |
-| HYGN-03 | TBD | Pending |
-| HYGN-04 | TBD | Pending |
-| STRC-01 | TBD | Pending |
-| STRC-02 | TBD | Pending |
-| STRC-03 | TBD | Pending |
-| STRC-04 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
-| TEST-05 | TBD | Pending |
-| CICD-01 | TBD | Pending |
-| CICD-02 | TBD | Pending |
-| CICD-03 | TBD | Pending |
-| RELS-01 | TBD | Pending |
-| RELS-02 | TBD | Pending |
+| HYGN-01 | Phase 1 | Pending |
+| HYGN-02 | Phase 1 | Pending |
+| HYGN-03 | Phase 1 | Pending |
+| HYGN-04 | Phase 2 | Pending |
+| STRC-01 | Phase 3 | Pending |
+| STRC-02 | Phase 3 | Pending |
+| STRC-03 | Phase 4 | Pending |
+| STRC-04 | Phase 3 | Pending |
+| TEST-01 | Phase 5 | Pending |
+| TEST-02 | Phase 6 | Pending |
+| TEST-03 | Phase 6 | Pending |
+| TEST-04 | Phase 6 | Pending |
+| TEST-05 | Phase 6 | Pending |
+| CICD-01 | Phase 5 | Pending |
+| CICD-02 | Phase 5 | Pending |
+| CICD-03 | Phase 5 | Pending |
+| RELS-01 | Phase 2 | Pending |
+| RELS-02 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-22 after initial definition*
+*Last updated: 2026-02-22 after roadmap creation — all 18 requirements mapped*
