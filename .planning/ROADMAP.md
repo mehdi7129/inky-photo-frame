@@ -29,12 +29,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. PR #3 is merged and the 13.3" display button C reads from GPIO 25 instead of the conflicting GPIO 16
   2. `git ls-files | grep __pycache__` returns no results and `.gitignore` contains the `__pycache__/` entry
   3. `SUMMARY.md` and `COLOR_CALIBRATION.md` are absent from the repository and no broken links reference them
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Merge PR #3 (GPIO 25 fix for 13.3" button C)
-- [ ] 01-02: Purge __pycache__ from git history and add .gitignore rule
-- [ ] 01-03: Remove obsolete documentation files
+- [ ] 01-01-PLAN.md — Squash merge PR #3 and reconcile local improvements (HYGN-01)
+- [ ] 01-02-PLAN.md — Expand .gitignore, remove __pycache__ tracking, delete obsolete docs (HYGN-02, HYGN-03)
 
 ### Phase 2: Release Preparation
 **Goal**: CHANGELOG.md is current and GitHub Release v2.0 notes are drafted, so release can be published immediately once the code refactor passes validation
@@ -122,7 +121,7 @@ Note: Phase 2 (Release Preparation) can be worked in parallel with Phase 3 (Modu
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Pre-flight Hygiene | 0/3 | Not started | - |
+| 1. Pre-flight Hygiene | 0/2 | Not started | - |
 | 2. Release Preparation | 0/2 | Not started | - |
 | 3. Module Extraction | 0/3 | Not started | - |
 | 4. Migration Validation | 0/2 | Not started | - |
