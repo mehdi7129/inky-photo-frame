@@ -1,4 +1,4 @@
-# Inky Photo Frame v2.0
+# Inky Photo Frame
 
 ## What This Is
 
@@ -8,70 +8,79 @@ A Raspberry Pi-powered photo frame application for Pimoroni Inky Impression e-in
 
 Photos display reliably on the e-ink screen with correct colors, and the system just works after installation -- no manual intervention needed.
 
+## Current State
+
+**Version:** v2.0.0 (shipped 2026-02-22)
+**Codebase:** 1,277 LOC Python across 10 files (9-module package + shim)
+**Platform:** Raspberry Pi OS Bookworm, Python 3.11+
+**Users:** Active installs via install.sh/update.sh
+
+### Architecture
+
+```
+inky_photo_frame.py (4-line shim) -> inky_photo_frame/app.py (orchestrator)
+                                       -> config.py (constants)
+                                       -> display.py (DisplayManager singleton)
+                                       -> image_processor.py (color pipelines)
+                                       -> photos.py (PhotoHandler, file watcher)
+                                       -> buttons.py (GPIO controller)
+                                       -> welcome.py (welcome screen)
+```
+
 ## Requirements
 
 ### Validated
 
-- Auto-detect Inky display models (7.3" Classic, 7.3" Spectra, 13.3" Spectra) -- existing
-- Photo slideshow with configurable intervals (daily or minutes-based) -- existing
-- GPIO button controls (next, prev, color mode cycle, reset) -- existing
-- SMB file sharing for photo uploads -- existing
-- Multiple color modes (Pimoroni, Spectra palette, Warmth boost) -- existing
-- File watcher for real-time new photo detection -- existing
-- Welcome screen with connection info and credentials -- existing
-- CLI wrapper (inky-photo-frame command with start, stop, status, logs, update, reset-password) -- existing
-- systemd service management with auto-restart -- existing
-- Photo history tracking and rotation -- existing
-- Storage cleanup with configurable limits -- existing
-- HEIC (iPhone) image format support -- existing
-- Password reset command -- existing (v1.1.7)
-- Configurable change interval in minutes -- existing (v1.1.7)
-- LED disable via systemd service -- existing (v1.1.7)
+- Auto-detect Inky display models (7.3" Classic, 7.3" Spectra, 13.3" Spectra) -- v1.0
+- Photo slideshow with configurable intervals -- v1.0, enhanced v2.0
+- GPIO button controls (next, prev, color mode cycle, reset) -- v1.1.0
+- SMB file sharing for photo uploads -- v1.0
+- Multiple color modes (Pimoroni, Spectra palette, Warmth boost) -- v1.0
+- File watcher for real-time new photo detection -- v1.0
+- Welcome screen with connection info and credentials -- v1.0
+- CLI wrapper (start, stop, status, logs, update, reset-password) -- v1.0, enhanced v2.0
+- systemd service management with auto-restart -- v1.0
+- Photo history tracking and rotation -- v1.0
+- Storage cleanup with configurable limits -- v1.0
+- HEIC (iPhone) image format support -- v1.0
+- Modular package architecture (9-module package + backward-compatible shim) -- v2.0
+- GPIO fix for 13.3" displays (button C on GPIO 25) -- v2.0
+- CHANGELOG.md covering v1.0 through v2.0 -- v2.0
+- GitHub Release v2.0 published -- v2.0
+- install.sh and update.sh updated for modular package -- v2.0
 
 ### Active
 
-- [ ] Merge PR #3: GPIO fix for 13.3" displays (button C on GPIO 25 instead of conflicting GPIO 16)
-- [ ] Modularize inky_photo_frame.py (1100 lines) into a clean multi-module package
-- [ ] Add unit tests with GPIO mocking and pure logic tests
-- [ ] Add CI/CD pipeline via GitHub Actions
-- [ ] Clean __pycache__ from repo and add to .gitignore
-- [ ] Clean obsolete documentation files (SUMMARY.md, COLOR_CALIBRATION.md)
-- [ ] Update CHANGELOG.md to reflect all changes since v1.0
-- [ ] Release v2.0 on GitHub
+(No active requirements -- next milestone not yet planned)
 
 ### Out of Scope
 
-- pip-installable package (pyproject.toml, setup.py) -- keep it simple, direct module imports
-- Web interface or remote management -- not needed, CLI + buttons is enough
+- pip-installable package (pyproject.toml, setup.py) -- install.sh is the distribution mechanism
+- Web interface or remote management -- CLI + buttons is sufficient
 - Additional display brands -- Pimoroni Inky only
 - Cloud photo sync -- SMB is sufficient
-
-## Context
-
-- The project has active users who installed via install.sh on Raspberry Pi
-- PR #3 from an external contributor fixes a real hardware conflict on 13.3" displays
-- The codebase grew organically to 1100 lines in a single file -- functional but hard to maintain
-- No tests exist -- changes are manually tested on hardware
-- GitHub releases stopped at v1.0 while code progressed to v1.1.7 via commits
-- The project runs on Raspberry Pi OS (Bookworm) with Python 3, GPIO, SPI, I2C
+- mypy strict mode -- no type stubs for inky/gpiozero hardware objects
+- Multi-Python version CI matrix -- single target: Python 3.11 on RPi OS Bookworm
 
 ## Constraints
 
-- **Retro-compatibility**: update.sh must migrate existing installations transparently -- no breaking changes
+- **Retro-compatibility**: update.sh must migrate existing installations transparently
 - **Package structure**: Simple package with modules, not pip-installable
-- **Hardware dependency**: Tests must mock GPIO/SPI/I2C for CI -- no Raspberry Pi needed in GitHub Actions
-- **Test priority**: Image processing pipeline and display logic are the most critical to cover
 - **Target platform**: Raspberry Pi OS only (no cross-platform support needed)
+- **Hardware dependency**: Tests would need to mock GPIO/SPI/I2C for CI
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Package simple, pas pip-installable | L'install se fait via install.sh, pas besoin de complexifier | -- Pending |
-| Mock GPIO pour les tests CI | Le hardware n'est pas disponible dans GitHub Actions | -- Pending |
-| Garder CHANGELOG.md dans le repo | Source de verite pour l'historique, en complement des release notes | -- Pending |
-| v2.0 comme version cible | Le refactoring structurel justifie un bump majeur | -- Pending |
-| Retro-compatible obligatoire | Des utilisateurs ont deja installe via install.sh | -- Pending |
+| Simple package, not pip-installable | install.sh is the distribution mechanism | Good -- keeps deployment simple |
+| v2.0 as target version | Structural refactoring justifies major bump | Good -- clear break from monolith era |
+| Backward-compatible shim | Active users have systemd pointing to inky_photo_frame.py | Good -- zero-change upgrade |
+| Leaf modules never import app.py | Prevents circular imports | Good -- clean dependency graph |
+| Constructor injection for ButtonController/PhotoHandler | Avoids importing orchestrator from leaf modules | Good -- testable design |
+| Lazy hardware imports (inky.auto inside initialize()) | Allows importing config without triggering GPIO | Good -- enables future testing |
+| Defer tests/CI to v2.1 | Core value is photo display, not CI badges | Pending -- revisit when adding features |
+| CHANGELOG written before code | Enables release draft early | Revisit -- caused false claims that needed fixing |
 
 ---
-*Last updated: 2026-02-22 after initialization*
+*Last updated: 2026-02-22 after v2.0 milestone*
