@@ -33,6 +33,7 @@ show_usage() {
     echo "  start                     Start the service"
     echo "  logs, -l, --logs          Show live logs"
     echo "  info, -i, --info          Show system information"
+    echo "  reset-password            Reset SMB password"
     echo "  version, -v, --version    Show version"
     echo "  help, -h, --help          Show this help"
     echo ""
@@ -127,6 +128,43 @@ case "$1" in
 
     info|-i|--info)
         show_info
+        ;;
+
+    reset-password|--reset-password)
+        print_header
+        echo -e "${YELLOW}🔐 Resetting SMB password...${NC}"
+        echo ""
+
+        # Generate new random 10-character password
+        NEW_PASSWORD=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c 10)
+        PASSWORD_FILE="/home/pi/.inky_credentials"
+        USER_NAME="inky"
+
+        # Read current username from credentials file
+        if [ -f "$PASSWORD_FILE" ]; then
+            USER_NAME=$(head -1 "$PASSWORD_FILE")
+        fi
+
+        # Update credentials file
+        echo "$USER_NAME" | sudo tee "$PASSWORD_FILE" > /dev/null
+        echo "$NEW_PASSWORD" | sudo tee -a "$PASSWORD_FILE" > /dev/null
+        sudo chmod 644 "$PASSWORD_FILE"
+
+        # Update SMB passwords for both inky and pi users
+        echo -e "$NEW_PASSWORD\n$NEW_PASSWORD" | sudo smbpasswd -s "$USER_NAME" 2>/dev/null
+        echo -e "$NEW_PASSWORD\n$NEW_PASSWORD" | sudo smbpasswd -s pi 2>/dev/null
+
+        echo -e "${GREEN}✅ Password reset successfully!${NC}"
+        echo ""
+        echo "New credentials:"
+        echo "  Username: $USER_NAME"
+        echo "  Password: $NEW_PASSWORD"
+        echo ""
+
+        # Restart service to update welcome screen
+        echo "Restarting service to update welcome screen..."
+        sudo systemctl restart $SERVICE_NAME 2>/dev/null
+        echo -e "${GREEN}✅ Welcome screen will show new credentials${NC}"
         ;;
 
     version|-v|--version)
