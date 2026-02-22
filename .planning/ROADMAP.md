@@ -43,11 +43,11 @@ Plans:
   1. CHANGELOG.md contains entries for every version from v1.0 through v2.0 in Keep a Changelog format
   2. A GitHub Release v2.0 draft exists with release notes that accurately describe what changed since v1.0
   3. The release notes reference the GPIO fix (PR #3), the module refactor, and the new test suite as key changes
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Write CHANGELOG.md entries from v1.0 through v2.0
-- [ ] 02-02: Draft and publish GitHub Release v2.0
+- [ ] 02-01-PLAN.md — Rewrite CHANGELOG.md in Keep a Changelog format (v1.0.0 through v2.0.0)
+- [ ] 02-02-PLAN.md — Draft GitHub Release v2.0.0 notes and create release draft
 
 ### Phase 3: Module Extraction
 **Goal**: The monolith is split into an importable Python package while the entry-point shim and systemd service require zero changes from users
