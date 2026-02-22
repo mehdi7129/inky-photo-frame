@@ -43,7 +43,7 @@ fi
 # Get current version
 CURRENT_VERSION="unknown"
 if [ -f "$INSTALL_DIR/inky_photo_frame.py" ]; then
-    CURRENT_VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame.py" | cut -d'"' -f2)
+    CURRENT_VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame/config.py" | cut -d'"' -f2)
 fi
 
 print_info "Current version: $CURRENT_VERSION"
@@ -65,14 +65,14 @@ sudo systemctl stop inky-photo-frame
 # Download new files
 print_info "Downloading updates from GitHub..."
 
-FILES_TO_UPDATE=(
+ROOT_FILES=(
     "inky_photo_frame.py"
     "update.sh"
     "inky-photo-frame-cli"
     "logrotate.conf"
 )
 
-for file in "${FILES_TO_UPDATE[@]}"; do
+for file in "${ROOT_FILES[@]}"; do
     print_info "Updating $file..."
     if curl -sSL -o "$INSTALL_DIR/$file.new" "$GITHUB_RAW/$file"; then
         mv "$INSTALL_DIR/$file.new" "$INSTALL_DIR/$file"
@@ -90,10 +90,42 @@ for file in "${FILES_TO_UPDATE[@]}"; do
     fi
 done
 
+# Download package modules
+print_info "Updating inky_photo_frame package..."
+mkdir -p "$INSTALL_DIR/inky_photo_frame"
+
+PACKAGE_FILES=(
+    "__init__.py"
+    "__main__.py"
+    "config.py"
+    "display.py"
+    "image_processor.py"
+    "photos.py"
+    "buttons.py"
+    "welcome.py"
+    "app.py"
+)
+
+for file in "${PACKAGE_FILES[@]}"; do
+    if curl -sSL -o "$INSTALL_DIR/inky_photo_frame/$file.new" "$GITHUB_RAW/inky_photo_frame/$file"; then
+        mv "$INSTALL_DIR/inky_photo_frame/$file.new" "$INSTALL_DIR/inky_photo_frame/$file"
+        print_status "inky_photo_frame/$file updated"
+    else
+        print_error "Failed to download inky_photo_frame/$file"
+        print_info "Restoring from backup..."
+        sudo systemctl stop inky-photo-frame
+        rm -rf "$INSTALL_DIR"
+        cp -r "$BACKUP_DIR/$BACKUP_NAME" "$INSTALL_DIR"
+        sudo systemctl start inky-photo-frame
+        print_error "Update failed, rolled back to previous version"
+        exit 1
+    fi
+done
+
 # Get new version
 NEW_VERSION="unknown"
 if [ -f "$INSTALL_DIR/inky_photo_frame.py" ]; then
-    NEW_VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame.py" | cut -d'"' -f2)
+    NEW_VERSION=$(grep "^VERSION = " "$INSTALL_DIR/inky_photo_frame/config.py" | cut -d'"' -f2)
 fi
 
 # Install system dependencies for lgpio (required for GPIO buttons)

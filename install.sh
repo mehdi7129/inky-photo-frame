@@ -159,18 +159,19 @@ mkdir -p $INSTALL_DIR
 # STEP 10: Download application files from GitHub
 print_info "STEP 10: Downloading application files from GitHub..."
 
-# List of files to download
-FILES_TO_DOWNLOAD=(
+GITHUB_RAW="https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main"
+
+# Download root-level files
+ROOT_FILES=(
     "inky_photo_frame.py"
     "update.sh"
     "inky-photo-frame-cli"
     "logrotate.conf"
 )
 
-# Always download from GitHub for consistency
-for file in "${FILES_TO_DOWNLOAD[@]}"; do
+for file in "${ROOT_FILES[@]}"; do
     print_info "Downloading $file..."
-    curl -sSL -o $INSTALL_DIR/$file https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/$file
+    curl -sSL -o $INSTALL_DIR/$file "$GITHUB_RAW/$file"
     if [ $? -ne 0 ]; then
         print_error "Failed to download $file"
         exit 1
@@ -178,7 +179,31 @@ for file in "${FILES_TO_DOWNLOAD[@]}"; do
     chmod +x $INSTALL_DIR/$file
 done
 
-print_status "Application files downloaded successfully"
+# Download package modules
+print_info "Downloading inky_photo_frame package..."
+mkdir -p $INSTALL_DIR/inky_photo_frame
+
+PACKAGE_FILES=(
+    "__init__.py"
+    "__main__.py"
+    "config.py"
+    "display.py"
+    "image_processor.py"
+    "photos.py"
+    "buttons.py"
+    "welcome.py"
+    "app.py"
+)
+
+for file in "${PACKAGE_FILES[@]}"; do
+    curl -sSL -o "$INSTALL_DIR/inky_photo_frame/$file" "$GITHUB_RAW/inky_photo_frame/$file"
+    if [ $? -ne 0 ]; then
+        print_error "Failed to download inky_photo_frame/$file"
+        exit 1
+    fi
+done
+
+print_status "Application files downloaded successfully (shim + 9 package modules)"
 
 # STEP 11: Configure Samba
 print_info "STEP 11: Configuring SMB file sharing..."
