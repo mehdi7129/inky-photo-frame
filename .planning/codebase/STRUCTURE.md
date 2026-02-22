@@ -38,12 +38,9 @@
 │       ├── STACK.md
 │       └── SUMMARY.md
 ├── README.md                          # User documentation
-├── INSTALLATION_GUIDE.md              # Setup instructions (candidate for removal in Phase 1)
-├── SUMMARY.md                         # Project overview (to be removed in Phase 1)
+├── INSTALLATION_GUIDE.md              # Setup instructions (candidate for removal)
 ├── CHANGELOG.md                       # Version history
-├── COLOR_CALIBRATION.md               # Color tuning reference (to be removed in Phase 1)
-├── LICENSE                            # MIT license
-└── __pycache__/                       # Python bytecode cache (committed by mistake, fix in Phase 1)
+└── LICENSE                            # MIT license
 ```
 
 **Installed on Raspberry Pi (runtime paths):**
@@ -249,9 +246,8 @@
 **`__pycache__/` (dev root):**
 - Purpose: Python bytecode cache
 - Generated: Yes (Python on import)
-- Committed: Yes — by mistake (tracked in git, Phase 1 fix removes it)
+- Committed: No (removed from tracking in Phase 1, covered by .gitignore)
 - Safe to delete: Yes (regenerated on next run)
-- Fix: `git rm -r --cached __pycache__/` in Phase 1
 
 **`.planning/codebase/`:**
 - Purpose: GSD analysis documents

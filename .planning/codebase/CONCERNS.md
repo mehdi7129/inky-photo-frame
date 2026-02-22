@@ -207,18 +207,14 @@
   - Add a schema version to the color mode file for future migration
 - Test coverage: No automated mode switching tests
 
-**`__pycache__/` Committed to Repository:**
-- Files: `__pycache__/` directory (tracked in repo)
-- Why fragile: Per `git ls-files` output, `__pycache__/` is present as a directory in the working tree. While `.gitignore` includes `__pycache__/`, this only applies to untracked files — already-tracked files remain. Per HYGN-02, this must be removed from git history.
-- Safe modification:
-  - Run `git rm -r --cached __pycache__/` and commit
-  - Verify `.gitignore` covers `**/__pycache__/` and `*.pyc`
-- Current state: Roadmap Phase 1 (01-02) addresses this
+**`__pycache__/` No Longer Tracked:**
+- Files: `__pycache__/` directory
+- Status: Verified not tracked in git as of Phase 1 (plan 01-02). `.gitignore` covers `__pycache__/` and `*.py[cod]`. No cached Python files found in `git ls-files`.
 
-**Obsolete Documentation Files Still Committed:**
-- Files: `SUMMARY.md`, `COLOR_CALIBRATION.md`
-- Why fragile: Per HYGN-03, these files are obsolete and should be removed. They remain committed. `SUMMARY.md` and `COLOR_CALIBRATION.md` are referenced in `ROADMAP.md` as targets for deletion.
-- Safe modification: Delete both files and update any cross-references before Phase 2 starts.
+**Obsolete Documentation Files Removed:**
+- Files: `SUMMARY.md`, `COLOR_CALIBRATION.md` (removed in Phase 1, plan 01-02)
+- Status: Both files were removed from the repository. `SUMMARY.md` was a v1.1.7 release summary in French, superseded by CHANGELOG.md. `COLOR_CALIBRATION.md` was a v1.0.1 color tuning guide, outdated since v1.1.0 introduced the 3-mode color system.
+- Note: `INSTALLATION_GUIDE.md` remains and is flagged as a candidate for removal (content may overlap with README.md).
 
 ## Scaling Limits
 
