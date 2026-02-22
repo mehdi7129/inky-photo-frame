@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Photos display reliably on the e-ink screen with correct colors, and the system just works after installation
-**Current focus:** Phase 1 - Pre-flight Hygiene
+**Current focus:** Phase 1 complete. Ready for Phase 2.
 
 ## Current Position
 
-Phase: 1 of 6 (Pre-flight Hygiene)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-02-22 — Completed 01-01 (Merge PR #3 and reconcile local changes)
+Phase: 1 of 6 (Pre-flight Hygiene) -- COMPLETE
+Plan: 2 of 2 in current phase (all done)
+Status: Phase Complete
+Last activity: 2026-02-22 — Completed 01-02 (Gitignore expansion and obsolete docs removal)
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
+- Total plans completed: 2
 - Average duration: 2min
-- Total execution time: 0.03 hours
+- Total execution time: 0.07 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-pre-flight-hygiene | 1 | 2min | 2min |
+| 01-pre-flight-hygiene | 2 | 4min | 2min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2min)
-- Trend: -
+- Last 5 plans: 01-01 (2min), 01-02 (2min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -47,6 +47,8 @@ Recent decisions affecting current work:
 - [Roadmap]: update.sh migration validated on real hardware as its own phase (Phase 4) — highest-risk deliverable, cannot be embedded elsewhere
 - [01-01]: Resolved merge conflicts by keeping local version as superset of PR #3 changes
 - [01-01]: Used .get() accessor for is_13inch config for safer fallback handling
+- [01-02]: INSTALLATION_GUIDE.md flagged as candidate for removal but left for user review
+- [01-02]: No __pycache__ files were tracked (confirmed by git ls-files), skipped git rm --cached step
 
 ### Pending Todos
 
@@ -60,5 +62,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 01-01-PLAN.md (Merge PR #3 and reconcile local changes)
+Stopped at: Completed 01-02-PLAN.md (Gitignore expansion and obsolete docs removal). Phase 1 complete.
 Resume file: None
