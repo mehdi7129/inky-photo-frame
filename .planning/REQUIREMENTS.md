@@ -21,28 +21,31 @@ Requirements for v2.0 release. Each maps to roadmap phases.
 - [ ] **STRC-03**: `update.sh` updated to download and deploy new package file structure
 - [x] **STRC-04**: systemd service continues working transparently after modularization (no ExecStart path change)
 
-### Testing
-
-- [ ] **TEST-01**: pytest test suite with `conftest.py` providing GPIO mocks (sys.modules injection + MockFactory) and DisplayManager singleton reset fixture
-- [ ] **TEST-02**: Pure logic tests for image processing pipeline (cropping, resizing, color mode transformations)
-- [ ] **TEST-03**: Pure logic tests for photo management (history rotation, pending queue, storage cleanup)
-- [ ] **TEST-04**: Display logic tests with mocked hardware (welcome screen rendering, display retry, scheduling logic)
-- [ ] **TEST-05**: Test coverage gate at 70%+ enforced via pytest-cov
-
-### CI/CD
-
-- [ ] **CICD-01**: GitHub Actions workflow running pytest + ruff check + ruff format on push and pull requests
-- [ ] **CICD-02**: `pyproject.toml` configuring ruff rules, pytest options, and coverage thresholds
-- [ ] **CICD-03**: pre-commit hooks configured for local ruff lint and format checks
-
 ### Release
 
 - [x] **RELS-01**: GitHub Release v2.0 published with comprehensive release notes
-- [ ] **RELS-02**: Backward-compatible `update.sh` migration verified (existing install.sh users update transparently)
 
 ## v2 Requirements
 
-Deferred to future releases. Tracked but not in current roadmap.
+Deferred to v2.1 or future releases. Tracked but not in current roadmap.
+
+### Testing (deferred from v2.0)
+
+- **TEST-01**: pytest test suite with `conftest.py` providing GPIO mocks (sys.modules injection + MockFactory) and DisplayManager singleton reset fixture
+- **TEST-02**: Pure logic tests for image processing pipeline (cropping, resizing, color mode transformations)
+- **TEST-03**: Pure logic tests for photo management (history rotation, pending queue, storage cleanup)
+- **TEST-04**: Display logic tests with mocked hardware (welcome screen rendering, display retry, scheduling logic)
+- **TEST-05**: Test coverage gate at 70%+ enforced via pytest-cov
+
+### CI/CD (deferred from v2.0)
+
+- **CICD-01**: GitHub Actions workflow running pytest + ruff check + ruff format on push and pull requests
+- **CICD-02**: `pyproject.toml` configuring ruff rules, pytest options, and coverage thresholds
+- **CICD-03**: pre-commit hooks configured for local ruff lint and format checks
+
+### Migration (deferred from v2.0)
+
+- **RELS-02**: Backward-compatible `update.sh` migration verified (existing install.sh users update transparently)
 
 ### Quality
 
@@ -76,23 +79,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HYGN-04 | Phase 2 | Complete |
 | STRC-01 | Phase 3 | Complete |
 | STRC-02 | Phase 3 | Complete |
-| STRC-03 | Phase 4 | Pending |
+| STRC-03 | Informal | Complete |
 | STRC-04 | Phase 3 | Complete |
-| TEST-01 | Phase 5 | Pending |
-| TEST-02 | Phase 6 | Pending |
-| TEST-03 | Phase 6 | Pending |
-| TEST-04 | Phase 6 | Pending |
-| TEST-05 | Phase 6 | Pending |
-| CICD-01 | Phase 5 | Pending |
-| CICD-02 | Phase 5 | Pending |
-| CICD-03 | Phase 5 | Pending |
 | RELS-01 | Phase 2 | Complete |
-| RELS-02 | Phase 4 | Pending |
+| TEST-01-05 | — | Deferred to v2.1 |
+| CICD-01-03 | — | Deferred to v2.1 |
+| RELS-02 | — | Deferred to v2.1 |
 
 **Coverage:**
-- v1 requirements: 18 total
-- Mapped to phases: 18
-- Unmapped: 0
+- v2.0 requirements: 9 total (scoped down from 18)
+- Satisfied: 9
+- Deferred to v2.1: 9
 
 ---
 *Requirements defined: 2026-02-22*

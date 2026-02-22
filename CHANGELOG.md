@@ -10,10 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Modular package structure: monolith split into `inky_photo_frame/` package with dedicated modules for config, display, image processing, photo management, buttons, welcome screen, and app orchestration
-- Pytest test suite with 70% coverage gate enforced in CI
-- GitHub Actions CI pipeline running ruff lint, ruff format, and pytest on every push and pull request
-- `conftest.py` with GPIO hardware mocks enabling test execution without physical Raspberry Pi hardware
-- Configurable photo rotation interval via `CHANGE_INTERVAL_MINUTES` environment variable, replacing the hardcoded 5 AM daily rotation
+- Configurable photo rotation interval via `CHANGE_INTERVAL_MINUTES` constant in `config.py`, replacing the hardcoded 5 AM daily rotation
+- `update.sh` and `install.sh` updated to deploy the new package structure transparently
 
 ### Changed
 
@@ -136,7 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Retry logic with exponential backoff (3 attempts, 1s/2s/4s delays) for transient GPIO/SPI errors
 - Log rotation via logrotate with 7-day retention
 
-[2.0.0]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.4...v2.0.0
+[2.0.0]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.7...v2.0.0
 [1.1.7]: https://github.com/mehdi7129/inky-photo-frame/compare/5fde38c...e5ce52b
 [1.1.6]: https://github.com/mehdi7129/inky-photo-frame/compare/4231b71...5fde38c
 [1.1.5]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.4...4231b71

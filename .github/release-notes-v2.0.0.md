@@ -2,9 +2,8 @@
 
 - **GPIO fix for 13.3" displays** -- Button C now reads GPIO 25 instead of the conflicting GPIO 16, which is active-low on the 13.3" Inky Impression hardware revision ([#3](https://github.com/mehdi7129/inky-photo-frame/pull/3))
 - **Modular package architecture** -- The monolithic `inky_photo_frame.py` (1100 lines) is split into 7 focused modules: `config`, `display`, `image_processor`, `photos`, `buttons`, `welcome`, and `app`. A backward-compatible shim at the original entry point preserves existing systemd service and cron configurations.
-- **Automated test suite** -- pytest with hardware mocks (GPIO, SPI, I2C) enables testing without physical Raspberry Pi hardware. A 70% coverage gate is enforced in CI.
-- **CI pipeline** -- GitHub Actions runs ruff lint, ruff format, and pytest on every push and pull request
-- **Configurable photo rotation interval** -- The `CHANGE_INTERVAL_MINUTES` environment variable replaces the hardcoded daily 5 AM rotation, allowing any interval from minutes to hours
+- **Configurable photo rotation interval** -- The `CHANGE_INTERVAL_MINUTES` constant in `config.py` replaces the hardcoded daily 5 AM rotation, allowing any interval from minutes to hours
+- **SMB password management** -- New `inky-photo-frame reset-password` CLI command for credential rotation
 
 ## Breaking Changes
 
@@ -28,17 +27,16 @@ inky-photo-frame update
 bash /home/pi/inky-photo-frame/update.sh
 ```
 
-`update.sh` automatically downloads the new modular package structure alongside the existing entry point. No manual steps are required. Photos stored in `/home/pi/Pictures/` and the color mode preference in `/home/pi/.inky_color_mode.json` are preserved.
+`update.sh` automatically downloads the new modular package structure alongside the existing entry point. No manual steps are required. Photos stored in `/home/pi/Images/` and the color mode preference in `/home/pi/.inky_color_mode.json` are preserved.
 
 ## Full Changelog
 
 ### Added
 
 - Modular package structure (`inky_photo_frame/` directory) with dedicated modules for config, display, image processing, photo management, buttons, welcome screen, and app orchestration
-- Pytest test suite with hardware mocks (`conftest.py`) enabling CI execution without physical GPIO/SPI/I2C hardware
-- GitHub Actions CI pipeline running ruff lint, ruff format, and pytest on every push and pull request
-- 70% test coverage gate enforced in CI
-- `CHANGE_INTERVAL_MINUTES` environment variable for configurable photo rotation intervals
+- `CHANGE_INTERVAL_MINUTES` constant in `config.py` for configurable photo rotation intervals
+- `update.sh` and `install.sh` updated to deploy the new package structure transparently
+- `inky-photo-frame reset-password` CLI command for SMB credential rotation
 
 ### Changed
 
