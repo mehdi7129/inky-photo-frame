@@ -58,12 +58,12 @@ Plans:
   2. `inky_photo_frame.py` at the repo root is a 3-line shim that imports and runs the package — it still executes correctly when invoked directly
   3. The running systemd service requires no `ExecStart` path change and restarts successfully after the package is deployed
   4. `python -c "from inky_photo_frame import config"` succeeds without importing hardware drivers
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Extract config.py (no-dependency module, extracted first)
-- [ ] 03-02: Extract display.py, image_processor.py, photos.py, buttons.py, welcome.py
-- [ ] 03-03: Extract app.py (orchestrator, extracted last) and write shim + __main__.py
+- [ ] 03-01-PLAN.md — Extract config.py and __init__.py (foundation module, zero dependencies)
+- [ ] 03-02-PLAN.md — Extract display.py, image_processor.py, photos.py, buttons.py, welcome.py (leaf modules)
+- [ ] 03-03-PLAN.md — Extract app.py orchestrator, create __main__.py, rewrite monolith as 3-line shim
 
 ### Phase 4: Migration Validation
 **Goal**: Existing users running `update.sh` from a v1.x installation arrive at the v2.0 package structure without any manual steps
