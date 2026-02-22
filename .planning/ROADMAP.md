@@ -13,7 +13,7 @@ Inky Photo Frame v2.0 transforms a working 1100-line monolith into a maintainabl
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Pre-flight Hygiene** - Merge the GPIO hardware fix and clean the repository before any restructuring (completed 2026-02-22)
-- [ ] **Phase 2: Release Preparation** - Write CHANGELOG.md and draft GitHub Release notes independently of the code refactor
+- [x] **Phase 2: Release Preparation** - Write CHANGELOG.md and draft GitHub Release notes independently of the code refactor (completed 2026-02-22)
 - [ ] **Phase 3: Module Extraction** - Split the monolith into a clean Python package with a backward-compatible shim
 - [ ] **Phase 4: Migration Validation** - Update and hardware-verify update.sh so existing users upgrade transparently
 - [ ] **Phase 5: CI Foundation** - Wire up GitHub Actions, ruff, pyproject.toml, and hardware-mock conftest.py
@@ -47,7 +47,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Rewrite CHANGELOG.md in Keep a Changelog format (v1.0.0 through v2.0.0)
-- [ ] 02-02-PLAN.md — Draft GitHub Release v2.0.0 notes and create release draft
+- [x] 02-02-PLAN.md — Draft GitHub Release v2.0.0 notes and create release draft
 
 ### Phase 3: Module Extraction
 **Goal**: The monolith is split into an importable Python package while the entry-point shim and systemd service require zero changes from users
@@ -122,7 +122,7 @@ Note: Phase 2 (Release Preparation) can be worked in parallel with Phase 3 (Modu
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Pre-flight Hygiene | 2/2 | Complete    | 2026-02-22 |
-| 2. Release Preparation | 1/2 | In progress | - |
+| 2. Release Preparation | 2/2 | Complete    | 2026-02-22 |
 | 3. Module Extraction | 0/3 | Not started | - |
 | 4. Migration Validation | 0/2 | Not started | - |
 | 5. CI Foundation | 0/3 | Not started | - |

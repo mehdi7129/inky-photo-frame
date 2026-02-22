@@ -37,7 +37,7 @@ Requirements for v2.0 release. Each maps to roadmap phases.
 
 ### Release
 
-- [ ] **RELS-01**: GitHub Release v2.0 published with comprehensive release notes
+- [x] **RELS-01**: GitHub Release v2.0 published with comprehensive release notes
 - [ ] **RELS-02**: Backward-compatible `update.sh` migration verified (existing install.sh users update transparently)
 
 ## v2 Requirements
@@ -86,7 +86,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CICD-01 | Phase 5 | Pending |
 | CICD-02 | Phase 5 | Pending |
 | CICD-03 | Phase 5 | Pending |
-| RELS-01 | Phase 2 | Pending |
+| RELS-01 | Phase 2 | Complete |
 | RELS-02 | Phase 4 | Pending |
 
 **Coverage:**
