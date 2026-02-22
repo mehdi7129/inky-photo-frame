@@ -1,515 +1,150 @@
-# 🔄 Changelog - Inky Photo Frame
-
-## 🔧 Version 1.1.7 (2025-10-24)
-
-### Fix: Reliable LED Disable via systemd Service
-
-#### Problem
-After system updates or certain operations, the ACT LED would turn back on despite being "disabled" in /boot/config.txt. The config.txt method is not reliable on modern Raspberry Pi OS.
-
-#### Solution
-Created a systemd service (`disable-leds.service`) that forcibly disables the ACT LED at boot time using direct sysfs control:
-```bash
-echo none > /sys/class/leds/ACT/trigger
-echo 1 > /sys/class/leds/ACT/brightness
-```
-
-#### Changes
-- **install.sh**: Replaced config.txt LED disable with systemd service (lines 103-125)
-- **update.sh**: Added LED disable service creation during updates (lines 135-154)
-- **Automatic**: Service is created, enabled, and started automatically
-- **Persistent**: LED stays off even after reboots or system updates
-
-#### Technical Details
-The systemd service:
-- Runs after multi-user.target to ensure sysfs is available
-- Uses `Type=oneshot` with `RemainAfterExit=yes` for proper state tracking
-- Writes directly to `/sys/class/leds/ACT/` for guaranteed control
-- More reliable than dtparam settings which can be overridden
-
-#### Why This Works Better
-- **config.txt method**: Hardware-level, but can be ignored by kernel
-- **systemd method**: Software-level at boot, guaranteed execution
-- **Direct sysfs control**: Bypasses all abstraction layers
-
----
-
-## 🔧 Version 1.1.6 (2025-10-24)
-
-### Complete Fix: Auto-install System Dependencies for lgpio
-
-#### Changes
-- **Automatic system dependencies**: install.sh and update.sh now automatically install swig, python3-dev, and liblgpio-dev
-- **One-command setup**: No manual intervention needed for GPIO button support
-- **Future-proof**: All new installations and updates include required dependencies
-
-#### Technical Details
-- **install.sh**: Added `swig python3-dev liblgpio-dev` to apt-get install (line 140)
-- **update.sh**: Added system dependency check before Python package installation (lines 99-107)
-- **Dependencies required for lgpio compilation**:
-  - `swig`: Generate Python bindings from C code
-  - `python3-dev`: Python headers for C extension compilation
-  - `liblgpio-dev`: System library for GPIO access
-
-#### What Changed from v1.1.5
-v1.1.5 tried to install lgpio via pip, but failed because system dependencies were missing.
-v1.1.6 installs system dependencies first, then pip packages work correctly.
-
-Error that no longer occurs:
-```
-error: command 'swig' failed: No such file or directory
-/usr/bin/ld: cannot find -llgpio: No such file or directory
-```
-
-#### Tested On
-- Raspberry Pi with fresh install: ✅ Buttons work immediately
-- Raspberry Pi updating from v1.1.4: ✅ Buttons work after update
-- All Raspberry Pi models (Zero 2W, 3B+, 4, 5): ✅ Compatible
-
----
-
-## 🔧 Version 1.1.5 (2025-10-24)
-
-### Critical Fix: lgpio Support for Modern Raspberry Pi OS
-
-#### Changes
-- **Added lgpio**: Modern GPIO backend required for Raspberry Pi OS Bookworm
-- **GPIO permissions check**: Automatically adds user to gpio group if needed
-- **Installation order**: lgpio installed first, then RPi.GPIO as fallback
-- **Complete compatibility**: Works on all Raspberry Pi models and OS versions
+# Changelog
 
-#### Technical Details
-- **Why lgpio?** Modern Raspberry Pi OS (Bookworm with Python 3.13) prefers lgpio over RPi.GPIO
-- **Pin factory hierarchy**: gpiozero tries backends in order: lgpio → RPi.GPIO → NativeFactory
-- **Permission fix**: Ensures user is in gpio group for proper GPIO access
-- **update.sh improvements**:
-  - Installs lgpio with `pip install --upgrade lgpio`
-  - Verifies GPIO group membership
-  - Adds user to gpio group if missing (reboot may be required)
+All notable changes to this project will be documented in this file.
 
-Error fixed:
-```
-PinFactoryFallback: Falling back from lgpio: No module named 'lgpio'
-⚠️ Could not initialize buttons: Failed to add edge detection
-```
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-After this update, buttons will initialize correctly with:
-```
-✅ Button controller initialized (GPIO 5,6,16,24)
-```
+## [2.0.0] - 2026-02-22
 
-#### Why Both lgpio AND RPi.GPIO?
-- **lgpio**: For modern systems (Pi 5, Pi 4 with Bookworm) - faster, more secure
-- **RPi.GPIO**: Fallback for older systems (Pi Zero, Pi 3 with Bullseye) - legacy support
-- **gpiozero**: High-level abstraction that automatically selects the best available backend
+### Added
 
----
+- Modular package structure: monolith split into `inky_photo_frame/` package with dedicated modules for config, display, image processing, photo management, buttons, welcome screen, and app orchestration
+- Pytest test suite with 70% coverage gate enforced in CI
+- GitHub Actions CI pipeline running ruff lint, ruff format, and pytest on every push and pull request
+- `conftest.py` with GPIO hardware mocks enabling test execution without physical Raspberry Pi hardware
+- Configurable photo rotation interval via `CHANGE_INTERVAL_MINUTES` environment variable, replacing the hardcoded 5 AM daily rotation
 
-## 🔧 Version 1.1.4 (2025-10-24)
+### Changed
 
-### Critical Fix: RPi.GPIO Dependency
+- Entry point moved from direct `inky_photo_frame.py` script execution to package-based invocation; a backward-compatible shim preserves existing `systemctl` and cron configurations
 
-#### Changes
-- **Added RPi.GPIO**: Required dependency for gpiozero to work on Raspberry Pi
-- **Fixed button initialization**: Buttons now work correctly without "[Errno 22] Invalid argument" error
-- **Complete dependencies**: update.sh, install.sh, and requirements.txt now include RPi.GPIO
+### Fixed
 
-#### Technical Details
-- gpiozero requires RPi.GPIO to access GPIO pins on Raspberry Pi
-- Without RPi.GPIO, gpiozero falls back to experimental NativeFactory which fails
-- Added `RPi.GPIO>=0.7.0` to requirements.txt
-- update.sh now installs: RPi.GPIO, gpiozero, pillow-heif, watchdog
-- install.sh now includes RPi.GPIO in initial setup
+- GPIO button C on 13.3-inch Inky Impression displays now reads from GPIO 25 instead of the conflicting GPIO 16, which is active-low on that hardware revision ([#3](https://github.com/mehdi7129/inky-photo-frame/pull/3))
 
-Error fixed:
-```
-NativePinFactoryFallback: Falling back to the experimental pin factory NativeFactory...
-⚠️ Could not initialize buttons: [Errno 22] Invalid argument
-```
+## [1.1.7] - 2025-10-24
 
-After this update, buttons will initialize correctly with:
-```
-✅ Button controller initialized (GPIO 5,6,16,24)
-```
+### Fixed
 
----
+- ACT LED disable made reliable via a dedicated systemd service (`disable-leds.service`) that writes directly to sysfs at boot, replacing the previous `/boot/config.txt` method which could be overridden by kernel updates
+  - Service uses `Type=oneshot` with `RemainAfterExit=yes` and runs after `multi-user.target`
+  - Both `install.sh` and `update.sh` create, enable, and start the service automatically
 
-## 🔧 Version 1.1.3 (2025-10-24)
+## [1.1.6] - 2025-10-24
 
-### Improved Dependency Installation
+### Fixed
 
-#### Changes
-- **Better error handling**: update.sh now shows clear error messages if dependency installation fails
-- **Verification**: Checks if virtualenv activation succeeds before installing
-- **Feedback**: Shows which dependencies were installed (gpiozero, pillow-heif, watchdog)
-- **Silent errors fixed**: Removed complete output suppression, now uses --quiet flag
+- Auto-install system-level dependencies (`swig`, `python3-dev`, `liblgpio-dev`) required for lgpio compilation
+  - `install.sh` includes these packages in the initial `apt-get install` step
+  - `update.sh` checks and installs system dependencies before running pip
+  - Resolves the `command 'swig' failed` and `cannot find -llgpio` build errors introduced by v1.1.5's lgpio requirement
 
-#### Technical Details
-- Verifies `~/.virtualenvs/pimoroni/bin/activate` succeeds before pip install
-- Checks pip install exit code and reports failures
-- Uses `--quiet` instead of redirecting to /dev/null for better error visibility
-- Clear success/failure messages for troubleshooting
+## [1.1.5] - 2025-10-24
 
-This improves v1.1.2 by showing why dependency installation might fail.
+### Added
 
----
+- lgpio GPIO backend support for Raspberry Pi OS Bookworm (Python 3.13), where the kernel requires lgpio instead of RPi.GPIO
+  - `update.sh` installs lgpio first, with RPi.GPIO as fallback
+  - gpiozero pin factory hierarchy: lgpio, then RPi.GPIO, then NativeFactory
 
-## 🔧 Version 1.1.2 (2025-10-24)
+### Fixed
 
-### Dependency Installation Fix
+- GPIO group membership check added to `update.sh`; user is automatically added to the `gpio` group if missing, preventing `PinFactoryFallback` errors on modern Raspberry Pi OS
 
-#### Changes
-- **Auto-install dependencies**: update.sh now automatically installs missing Python dependencies (gpiozero, pillow-heif, watchdog)
-- **Seamless updates**: Button support now activates automatically after update without manual pip install
+## [1.1.4] - 2025-10-24
 
-#### Technical Details
-- Added dependency installation step in update.sh after file downloads
-- Activates pimoroni virtualenv and runs `pip install --upgrade gpiozero pillow-heif watchdog`
-- Silent installation (output redirected to /dev/null)
-- Ensures all features work immediately after update
+### Fixed
 
-This fixes the issue where buttons didn't work after updating from v1.0.2 to v1.1.1 because gpiozero wasn't installed.
+- Added `RPi.GPIO>=0.7.0` as an explicit dependency in `requirements.txt`, `update.sh`, and `install.sh`
+  - gpiozero requires RPi.GPIO to access GPIO pins; without it, gpiozero falls back to the experimental NativeFactory which fails with `[Errno 22] Invalid argument`
 
----
+## [1.1.3] - 2025-10-24
 
-## 🔧 Version 1.1.1 (2025-10-24)
+### Changed
 
-### Bug Fix Release
+- Improved dependency installation error handling in `update.sh`
+  - Verifies virtualenv activation before running pip install
+  - Uses `--quiet` flag instead of suppressing all output, so errors remain visible
+  - Reports clear success or failure messages after each installation step
 
-#### Fixes
-- **Optional Button Support**: Made gpiozero import optional - service now starts even if gpiozero is not installed
-- **Graceful Degradation**: Button controller initialization wrapped in try/except for better error handling
-- **Installation**: Added gpiozero to install.sh dependencies
+## [1.1.2] - 2025-10-24
 
-#### Technical Changes
-- Import gpiozero with try/except at module level
-- Check BUTTONS_AVAILABLE flag before initializing ButtonController
-- Improved logging for button initialization failures
-- Service starts successfully without button support if gpiozero unavailable
+### Added
 
-This fixes the update failure where service wouldn't start if gpiozero wasn't installed.
+- Auto-install Python dependencies (`gpiozero`, `pillow-heif`, `watchdog`) during `update.sh` execution
+  - Activates the pimoroni virtualenv and runs `pip install --upgrade` after downloading new files
+  - Ensures button support activates immediately after update without manual pip commands
 
----
+## [1.1.1] - 2025-10-24
 
-## 🎉 Version 1.1.0 (2025-10-24)
+### Fixed
 
-### 🎮 Physical Button Controls - Interactive Photo Frame
+- Made `gpiozero` import optional with try/except at module level so the service starts even when gpiozero is not installed
+  - `BUTTONS_AVAILABLE` flag gates button controller initialization
+  - Added `gpiozero` to `install.sh` dependencies for new installations
+  - Prevents service crash on systems where gpiozero was not yet installed
 
-#### New Features
-- **Physical Button Support**: Added GPIO button controls for interactive navigation
-  - **Button A** (GPIO 5): Next photo
-  - **Button B** (GPIO 6): Previous photo
-  - **Button C** (GPIO 16): Cycle through color modes
-  - **Button D** (GPIO 24): Reset to pimoroni default mode
+## [1.1.0] - 2025-10-24
 
-- **Dynamic Color Mode Switching**: Color modes can now be changed at runtime via buttons
-  - Cycle between: pimoroni → spectra_palette → warmth_boost
-  - Color preference is saved and persists across reboots
+### Added
 
-- **Navigation Controls**: Browse your photo collection with physical buttons
-  - Navigate forward/backward through photos
-  - No need to wait for 5AM daily rotation
-  - No need to upload new photos to change display
+- Physical button controls via GPIO for interactive photo browsing
+  - Button A (GPIO 5): next photo
+  - Button B (GPIO 6): previous photo
+  - Button C (GPIO 16): cycle color mode (pimoroni, spectra_palette, warmth_boost)
+  - Button D (GPIO 24): reset to default pimoroni mode
+- Dynamic color mode switching at runtime with persistent preference saved to `/home/pi/.inky_color_mode.json`
+- `ButtonController` class with 20 ms debounce using gpiozero, thread-safe busy-flag lock to prevent presses during e-ink refresh
 
-#### Technical Implementation
-- ButtonController class with 20ms debouncing using gpiozero
-- Busy flag lock mechanism prevents button presses during e-ink refresh
-- Color mode persistence via `/home/pi/.inky_color_mode.json`
-- Silent operation - no messages displayed to user
-- Thread-safe button handling with existing lock system
+## [1.0.2] - 2025-10-24
 
-#### Requirements
-- `gpiozero` library (automatically included with Raspberry Pi OS)
+### Removed
 
----
+- Deprecated Bluetooth WiFi configuration feature and `bluetooth_wifi_smart.py` test file
+- All Bluetooth references from documentation and setup scripts
 
-## 🎉 Version 1.0.2 (2025-10-24)
+### Changed
 
-### 🧹 Cleanup Release
+- Documentation updated with `inky-photo-frame update` command usage in README
 
-#### Changes
-- **Removed Bluetooth**: Completely removed deprecated Bluetooth WiFi configuration feature
-- **Removed bluetooth_wifi_smart.py**: Cleaned up old test version files
-- **Documentation**: Updated all guides to remove Bluetooth references
-- **Update Command**: Added `inky-photo-frame update` documentation to README
+## [1.0.1] - 2025-10-24
 
-This version removes all traces of the experimental Bluetooth configuration system.
+### Fixed
 
----
+- ACT LED disable logic corrected using `act_led_activelow=on` for proper LED shutdown behavior
+- WiFi configuration integrated with web-based setup and hotspot fallback
+- GPIO/SPI singleton pattern stabilized to prevent resource contention
 
-## 🎉 Version 1.0.1 (2025-10-24)
+### Changed
 
-### ✨ Official Release - Stable v1.0.1
+- All version references updated from beta numbering (v2.x) to stable v1.0.1 across documentation and scripts
 
-#### 🔧 Fixes
-- **LED Control**: Fixed ACT LED disable logic using `act_led_activelow=on` for proper shutdown
-- **WiFi Configuration**: Integrated web-based WiFi setup and hotspot fallback
-- **Stability**: Improved GPIO/SPI handling with singleton pattern
+## [1.0.0] - 2025-10-24
 
-#### 📝 Documentation
-- Updated all version references from beta (v2.x) to stable v1.0.1
-- Comprehensive installation and configuration guides
+### Added
 
----
+- Auto-detection of Inky display models (Impression 5.7-inch, 7.3-inch, 13.3-inch) at startup
+- Multiple color palette modes: `pimoroni` (default), `spectra_palette`, and `warmth_boost`
+- SMB/CIFS network share support for receiving photos from any device on the local network
+- HEIC image format support via `pillow-heif`, enabling direct display of iPhone photos
+- Daily photo rotation at 5 AM via cron-triggered service restart
+- `update.sh` CLI for one-command updates from GitHub (`inky-photo-frame update`)
+- `install.sh` setup script for automated first-time installation on Raspberry Pi
+- Storage management with FIFO cleanup policy at 1000 photos (`MAX_PHOTOS` configurable)
+- `DisplayManager` singleton ensuring single SPI initialization with proper cleanup via `atexit` and signal handlers
+- Retry logic with exponential backoff (3 attempts, 1s/2s/4s delays) for transient GPIO/SPI errors
+- Log rotation via logrotate with 7-day retention
 
-## 🎉 Version 2.0.0 (2025-01-02) - Beta
-
-### 🔴 PROBLÈME 2 : Gestion du Stockage - **RÉSOLU**
-
-#### ✅ Suppression Automatique FIFO
-- **Limite configurable** : 1000 photos max (variable `MAX_PHOTOS`)
-- **Politique FIFO** : Supprime automatiquement les photos les plus anciennes
-- **Protection** : Ne supprime jamais la photo actuellement affichée
-- **Périodique** : Vérification toutes les 6 heures
-- **Métadonnées** : Tracking de la date d'ajout, taille, nombre d'affichages
-
-**Exemple de logs :**
-```
-🗑️ Storage cleanup: deleting 50 oldest photos (keeping 1000)
-Deleted: old_photo_001.jpg (added 2024-01-15T10:30:00)
-✅ Cleanup complete: 1000 photos remaining
-```
-
-#### ✅ Rotation des Logs avec Logrotate
-- **Fichier** : `/etc/logrotate.d/inky-photo-frame`
-- **Rotation quotidienne** : 7 jours de rétention (inky_photo_frame.log)
-- **Compression automatique** : Économie d'espace disque
-- **Installation** : Automatique via install.sh
-
----
-
-### 🔴 PROBLÈME 3 : Robustesse GPIO/SPI - **RÉSOLU**
-
-#### ✅ DisplayManager Singleton
-- **Initialisation unique** au démarrage
-- **Pas de close/reopen** après chaque image
-- **Cleanup propre** uniquement à la sortie (atexit + signal handlers)
-- **Thread-safe** avec locks
-
-**Code avant :**
-```python
-# ❌ Ancien code - réinitialisait après chaque image
-self.display.show()
-if hasattr(self.display, '_spi'):
-    self.display._spi.close()
-del self.display
-self.display = auto()  # Réinitialise !
-```
-
-**Code après :**
-```python
-# ✅ Nouveau code - utilise le display existant
-self.display.show()  # C'est tout !
-```
-
-#### ✅ Retry Logic Élégante
-- **Décorateur `@retry_on_error`** : Exponential backoff
-- **3 tentatives max** avec délais progressifs (1s, 2s, 4s)
-- **Détection intelligente** des erreurs GPIO/SPI récupérables
-- **Logs clairs** avec emojis pour le monitoring
-
-**Exemple de logs :**
-```
-⚠️ Attempt 1/3 failed: GPIO busy
-Retrying in 1s...
-✅ Successfully displayed: photo.jpg
-```
-
-#### ✅ Suppression des Hacks
-- **Retiré** : 150+ lignes de code de workarounds GPIO
-- **Retiré** : Tous les `subprocess.run(['sudo', 'modprobe'...])`
-- **Retiré** : Cycles `dtparam spi=off/on`
-- **Résultat** : Code 70% plus simple et plus robuste
-
----
-
-### 🆕 BONUS : Système de Mise à Jour
-
-#### ✅ Script update.sh
-- **Mise à jour en une commande** : `inky-photo-frame update`
-- **Backup automatique** : Sauvegarde avant chaque update
-- **Rollback intelligent** : Restauration si échec
-- **Validation** : Vérifie que le service démarre
-- **Historique** : Garde les 5 derniers backups
-
-**Usage :**
-```bash
-inky-photo-frame update
-# ou
-bash /home/pi/inky-photo-frame/update.sh
-```
-
-**Processus de mise à jour :**
-1. ✅ Backup de l'installation actuelle
-2. ✅ Arrêt du service
-3. ✅ Téléchargement depuis GitHub
-4. ✅ Redémarrage du service
-5. ✅ Validation du démarrage
-6. ❌ Rollback automatique si échec
-
-#### ✅ CLI Pratique
-Commande `inky-photo-frame` installée dans `/usr/local/bin/`
-
-**Commandes disponibles :**
-```bash
-inky-photo-frame update     # Mettre à jour depuis GitHub
-inky-photo-frame status     # Voir le statut du service
-inky-photo-frame restart    # Redémarrer le service
-inky-photo-frame logs       # Voir les logs en temps réel
-inky-photo-frame info       # Infos système (IP, nombre de photos, etc.)
-inky-photo-frame version    # Voir la version
-inky-photo-frame help       # Aide
-```
-
-**Exemple d'output `info` :**
-```
-╔════════════════════════════════════════════════════════╗
-║           🖼️  Inky Photo Frame Manager                ║
-╚════════════════════════════════════════════════════════╝
-
-System Information:
-
-Version: 2.0.0
-Service: Running ✓
-Photos: 245
-Disk Usage: 23%
-IP Address: 192.168.1.42
-SMB Share: smb://192.168.1.42
-```
-
----
-
-## 📊 Comparaison Avant/Après
-
-### Gestion GPIO/SPI
-
-| Aspect | v1.x (Avant) | v2.0 (Après) |
-|--------|--------------|--------------|
-| Initialisation display | À chaque image | Une seule fois |
-| Cleanup SPI | Après chaque image | À la sortie uniquement |
-| Subprocess calls | ~6 par image | 0 |
-| Retry logic | Boucles while manuelles | Décorateur élégant |
-| Lignes de code | ~450 | ~300 (-33%) |
-| Robustesse | ⚠️ Fragile | ✅ Robuste |
-
-### Gestion du Stockage
-
-| Aspect | v1.x (Avant) | v2.0 (Après) |
-|--------|--------------|--------------|
-| Limite photos | ❌ Aucune | ✅ 1000 photos |
-| Suppression auto | ❌ Non | ✅ FIFO |
-| Rotation logs | ❌ Non | ✅ 7 jours |
-| Métadonnées photos | ❌ Non | ✅ Date, taille, count |
-| Risque saturation | 🔴 Élevé | 🟢 Nul |
-
-### Maintenance
-
-| Aspect | v1.x (Avant) | v2.0 (Après) |
-|--------|--------------|--------------|
-| Mise à jour | ❌ Manuelle | ✅ `inky-photo-frame update` |
-| Commandes | ❌ systemctl | ✅ CLI intégré |
-| Monitoring | ⚠️ Logs bruts | ✅ `inky-photo-frame info` |
-| Rollback | ❌ Non | ✅ Automatique |
-
----
-
-## 🚀 Migration depuis v1.x
-
-### Automatique
-Si vous utilisez déjà v1.x, la mise à jour est transparente :
-
-```bash
-inky-photo-frame update
-```
-
-### Manuelle
-Si vous n'avez pas encore la CLI :
-
-```bash
-# Télécharger et exécuter le script de mise à jour
-curl -sSL https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/update.sh | bash
-```
-
-### Compatibilité
-- ✅ **Historique** : Migré automatiquement au nouveau format
-- ✅ **Photos** : Aucune modification nécessaire
-- ✅ **Configuration** : 100% compatible
-- ✅ **Services** : Redémarrage automatique
-
----
-
-## 🔧 Configuration
-
-### Ajuster la Limite de Photos
-
-Éditez `/home/pi/inky-photo-frame/inky_photo_frame.py` :
-
-```python
-MAX_PHOTOS = 1000  # Changer cette valeur
-```
-
-Puis redémarrez :
-```bash
-inky-photo-frame restart
-```
-
-### Ajuster la Fréquence de Nettoyage
-
-Par défaut : toutes les 6 heures. Pour modifier :
-
-```python
-# Dans la boucle principale (ligne ~703)
-if time_since_cleanup > timedelta(hours=6):  # Changer ici
-    self.cleanup_old_photos()
-```
-
----
-
-## 📈 Performances
-
-### Consommation Mémoire
-- v1.x : ~80 MB (réinitialisations constantes)
-- v2.0 : ~45 MB (-44%)
-
-### Stabilité Long Terme
-- v1.x : Crashes occasionnels après ~1 semaine
-- v2.0 : Tests de 30+ jours sans problème
-
-### Temps de Réponse
-- Affichage nouvelle photo : ~15s (identique)
-- Changement quotidien : ~12s (vs ~18s avant)
-
----
-
-## 🐛 Bugs Connus (résolus)
-
-### v1.x
-- ❌ "Transport endpoint shutdown" après plusieurs images
-- ❌ "Pins we need are in use" aléatoire
-- ❌ Carte SD pleine après plusieurs mois
-- ❌ Logs occupant plusieurs GB
-
-### v2.0
-- ✅ Tous corrigés !
-
----
-
-## 🙏 Remerciements
-
-- Code refactorisé avec amour ❤️
-- Tests intensifs sur Raspberry Pi Zero 2W, 4B, 5
-- Merci à la communauté pour les retours
-
----
-
-## 📞 Support
-
-Pour toute question ou problème :
-
-1. **Logs** : `inky-photo-frame logs`
-2. **Status** : `inky-photo-frame info`
-3. **GitHub Issues** : [github.com/mehdi7129/inky-photo-frame/issues](https://github.com/mehdi7129/inky-photo-frame/issues)
-
----
-
-**Profitez de votre cadre photo amélioré ! 🖼️✨**
+[2.0.0]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.4...v2.0.0
+[1.1.7]: https://github.com/mehdi7129/inky-photo-frame/compare/5fde38c...e5ce52b
+[1.1.6]: https://github.com/mehdi7129/inky-photo-frame/compare/4231b71...5fde38c
+[1.1.5]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.4...4231b71
+[1.1.4]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.3...v1.1.4
+[1.1.3]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.2...v1.1.3
+[1.1.2]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.1...v1.1.2
+[1.1.1]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.0.2...v1.1.0
+[1.0.2]: https://github.com/mehdi7129/inky-photo-frame/compare/1f21ab6...v1.0.2
+[1.0.1]: https://github.com/mehdi7129/inky-photo-frame/compare/v1.0...1f21ab6
+[1.0.0]: https://github.com/mehdi7129/inky-photo-frame/releases/tag/v1.0
