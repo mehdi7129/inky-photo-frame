@@ -9,7 +9,7 @@ Requirements for v2.0 release. Each maps to roadmap phases.
 
 ### Repository Hygiene
 
-- [ ] **HYGN-01**: PR #3 merged -- GPIO fix for 13.3" displays integrated into codebase
+- [x] **HYGN-01**: PR #3 merged -- GPIO fix for 13.3" displays integrated into codebase
 - [ ] **HYGN-02**: `__pycache__/` removed from repo history and added to .gitignore
 - [ ] **HYGN-03**: Obsolete documentation files removed (SUMMARY.md, COLOR_CALIBRATION.md)
 - [ ] **HYGN-04**: CHANGELOG.md updated with all changes from v1.0 through v2.0
@@ -70,7 +70,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HYGN-01 | Phase 1 | Pending |
+| HYGN-01 | Phase 1 | Complete |
 | HYGN-02 | Phase 1 | Pending |
 | HYGN-03 | Phase 1 | Pending |
 | HYGN-04 | Phase 2 | Pending |

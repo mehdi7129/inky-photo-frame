@@ -121,7 +121,7 @@ Note: Phase 2 (Release Preparation) can be worked in parallel with Phase 3 (Modu
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Pre-flight Hygiene | 0/2 | Not started | - |
+| 1. Pre-flight Hygiene | 1/2 | In Progress | - |
 | 2. Release Preparation | 0/2 | Not started | - |
 | 3. Module Extraction | 0/3 | Not started | - |
 | 4. Migration Validation | 0/2 | Not started | - |
