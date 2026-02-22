@@ -12,7 +12,7 @@ Inky Photo Frame v2.0 transforms a working 1100-line monolith into a maintainabl
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Pre-flight Hygiene** - Merge the GPIO hardware fix and clean the repository before any restructuring
+- [x] **Phase 1: Pre-flight Hygiene** - Merge the GPIO hardware fix and clean the repository before any restructuring (completed 2026-02-22)
 - [ ] **Phase 2: Release Preparation** - Write CHANGELOG.md and draft GitHub Release notes independently of the code refactor
 - [ ] **Phase 3: Module Extraction** - Split the monolith into a clean Python package with a backward-compatible shim
 - [ ] **Phase 4: Migration Validation** - Update and hardware-verify update.sh so existing users upgrade transparently
@@ -121,7 +121,7 @@ Note: Phase 2 (Release Preparation) can be worked in parallel with Phase 3 (Modu
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Pre-flight Hygiene | 1/2 | In Progress | - |
+| 1. Pre-flight Hygiene | 1/2 | Complete    | 2026-02-22 |
 | 2. Release Preparation | 0/2 | Not started | - |
 | 3. Module Extraction | 0/3 | Not started | - |
 | 4. Migration Validation | 0/2 | Not started | - |
