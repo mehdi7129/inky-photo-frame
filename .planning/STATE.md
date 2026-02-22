@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Photos display reliably on the e-ink screen with correct colors, and the system just works after installation
-**Current focus:** Phase 3 in progress. Config + 5 leaf modules extracted. Next: app.py orchestrator extraction (03-03).
+**Current focus:** Phase 3 complete. Monolith fully decomposed into 9-file Python package. Ready for Phase 4 (Migration Validation).
 
 ## Current Position
 
-Phase: 3 of 6 (Module Extraction)
-Plan: 2 of 3 in current phase
-Status: Executing
-Last activity: 2026-02-22 — Completed 03-02 (Leaf module extraction)
+Phase: 3 of 6 (Module Extraction) -- COMPLETE
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-02-22 — Completed 03-03 (Orchestrator extraction)
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 2min
-- Total execution time: 0.20 hours
+- Total execution time: 0.23 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [██████░░░░] 60%
 |-------|-------|-------|----------|
 | 01-pre-flight-hygiene | 2 | 4min | 2min |
 | 02-release-preparation | 2 | 3min | 1.5min |
-| 03-module-extraction | 2 | 5min | 2.5min |
+| 03-module-extraction | 3 | 7min | 2.3min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (2min), 02-02 (1min), 03-01 (2min), 03-02 (3min)
+- Last 5 plans: 02-01 (2min), 02-02 (1min), 03-01 (2min), 03-02 (3min), 03-03 (2min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -63,6 +63,9 @@ Recent decisions affecting current work:
 - [03-02]: display_welcome() takes explicit display/width/height params instead of self.*
 - [03-02]: ButtonController and PhotoHandler use constructor injection, no import of app.py
 - [03-02]: ImageEnhance stays as local import inside color functions (matching monolith pattern)
+- [03-03]: setup_logging() called inside InkyPhotoFrame.__init__(), never at module level
+- [03-03]: Shim and __main__.py have no if-main guard (always run when executed directly)
+- [03-03]: Orchestrator pattern: app.py imports all leaf modules, leaf modules never import app.py
 
 ### Pending Todos
 
@@ -76,5 +79,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 03-02-PLAN.md (Leaf module extraction). Phase 3 in progress (2 of 3 plans done).
+Stopped at: Completed 03-03-PLAN.md (Orchestrator extraction). Phase 3 complete (3 of 3 plans done). Ready for Phase 4.
 Resume file: None
