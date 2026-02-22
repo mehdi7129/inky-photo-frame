@@ -5,61 +5,59 @@
 ## Naming Patterns
 
 **Files:**
-- `inky_photo_frame.py` - Main application file using snake_case
-- `inky-photo-frame-cli` - CLI wrapper using kebab-case for shell scripts
-- Convention: Snake_case for Python modules, kebab-case for shell scripts/binaries
+- Python modules: `snake_case.py` — `inky_photo_frame.py`
+- Shell scripts/binaries: `kebab-case` — `inky-photo-frame-cli`, `install.sh`, `update.sh`, `uninstall.sh`, `diagnostic_report.sh`
 
 **Functions:**
-- Public methods: camelCase with lowercase start (e.g., `display_photo()`, `next_photo()`, `change_photo()`)
-- Private/internal methods: underscore prefix with snake_case (e.g., `_on_button_a()`, `_apply_spectra_palette()`, `_apply_warmth_boost()`)
-- Decorator functions: snake_case (e.g., `retry_on_error()`)
+- Public methods: `snake_case` — `display_photo()`, `next_photo()`, `change_photo()`, `load_history()`, `save_history()`
+- Private/internal methods: `_snake_case` with leading underscore — `_on_button_a()`, `_apply_spectra_palette()`, `_apply_warmth_boost()`
+- Module-level utility functions: `snake_case` — `retry_on_error()`
 
 **Variables:**
-- Module-level constants: UPPERCASE_WITH_UNDERSCORES (e.g., `PHOTOS_DIR`, `CHANGE_HOUR`, `COLOR_MODE`, `MAX_PHOTOS`, `VERSION`, `LOG_FILE`)
-- Instance variables: snake_case with no prefix (e.g., `self.display`, `self.width`, `self.history`, `self.button_controller`)
-- Local variables: snake_case (e.g., `photo_path`, `next_photo`, `is_recoverable`)
-- Boolean prefixes: Generally no "is_" prefix in most cases, but used when appropriate (e.g., `BUTTONS_AVAILABLE`, `self.is_spectra`, `self.is_13inch`)
+- Module-level constants: `UPPER_SNAKE_CASE` — `PHOTOS_DIR`, `CHANGE_HOUR`, `COLOR_MODE`, `MAX_PHOTOS`, `VERSION`, `LOG_FILE`, `SPECTRA_PALETTE`, `WARMTH_BOOST_CONFIG`, `DISPLAY_CONFIGS`
+- Instance variables: `snake_case` without prefix — `self.display`, `self.width`, `self.history`, `self.button_controller`, `self.color_mode`, `self.saturation`
+- Local variables: `snake_case` — `photo_path`, `next_photo`, `is_recoverable`, `wait_time`
+- Boolean module flags: `UPPER_SNAKE_CASE` — `BUTTONS_AVAILABLE`
+- Boolean instance attributes: `snake_case` with `is_` prefix for display properties — `self.is_spectra`, `self.is_13inch`
 
 **Types/Classes:**
-- Class names: PascalCase (e.g., `DisplayManager`, `ButtonController`, `PhotoHandler`, `InkyPhotoFrame`)
-- Dictionary keys: snake_case (e.g., in `DISPLAY_CONFIGS`, `gpio_pins`, `button_a`, `detection`)
-- Config dictionaries: Nested dicts with lowercase keys (e.g., `SPECTRA_PALETTE`, `WARMTH_BOOST_CONFIG`)
+- Class names: `PascalCase` — `DisplayManager`, `ButtonController`, `PhotoHandler`, `InkyPhotoFrame`
+- Dictionary keys: lowercase `snake_case` — `gpio_pins`, `button_a`, `detection`, `is_spectra`, `module_contains`
+- Module-level config dictionaries: `UPPER_SNAKE_CASE` dict names with lowercase keys — `SPECTRA_PALETTE`, `WARMTH_BOOST_CONFIG`, `DISPLAY_CONFIGS`
 
 ## Code Style
 
 **Formatting:**
-- No explicit formatter detected (no .prettierrc, .style.yapf, etc.)
-- Indentation: 4 spaces (Python standard)
-- Line length: Appears to follow ~100-110 character limit (most lines wrap appropriately)
-- String quotes: Mix of single and double quotes, no strict convention
-  - Double quotes for docstrings and longer strings
-  - Single quotes for simple strings in some contexts
-  - f-strings used extensively for logging (e.g., `f'🚀 Inky Photo Frame v{VERSION}'`)
+- No explicit formatter configured (no `.style.yapf`, `pyproject.toml`, `.black`, or similar)
+- Indentation: 4 spaces (Python standard PEP 8)
+- Line length: Approximately 100-110 characters; no enforced limit
+- String quotes: Mix of single and double quotes
+  - f-strings used extensively throughout logging calls: `f'🚀 Inky Photo Frame v{VERSION}'`
+  - Single quotes preferred for simple string literals: `'pimoroni'`, `'spectra_palette'`
+  - Double quotes used for longer docstrings and some constants
 
 **Linting:**
-- No linting configuration files detected (.eslintrc, .flake8, .pylintrc, pyproject.toml)
-- Code follows general PEP 8 conventions implicitly
-- Some exceptions: bare `except:` clause used (line 548-552 in `display_welcome()`)
+- No linting configuration detected (`.flake8`, `.pylintrc`, `pyproject.toml [tool.flake8]` absent)
+- Code implicitly follows PEP 8 conventions
+- Known exception: bare `except:` clause used intentionally in font loading fallback (`inky_photo_frame.py` line 548) for graceful degradation
 
 ## Import Organization
 
 **Order:**
-1. Standard library imports (os, json, random, datetime, pathlib, PIL, time, logging, sys, etc.)
-2. Third-party library imports (watchdog, gpiozero)
-3. Optional imports in try/except blocks (pillow_heif, gpiozero)
-4. Local/relative imports: None used (single-file application)
+1. Standard library imports (grouped together at top)
+2. Third-party library imports (PIL, watchdog)
+3. Optional hardware imports in `try/except` blocks
 
-**Pattern from lines 30-56:**
+**Pattern from `inky_photo_frame.py` lines 30-56:**
 ```python
 import os
-# Set environment variable to skip GPIO check
-os.environ['INKY_SKIP_GPIO_CHECK'] = '1'
+os.environ['INKY_SKIP_GPIO_CHECK'] = '1'  # env var set immediately after os import
 import json
 import random
 from datetime import datetime, timedelta
 from pathlib import Path
 from PIL import Image, ImageOps, ImageDraw, ImageFont
-import time as time_module
+import time as time_module  # aliased to avoid shadowing
 import logging
 import sys
 from watchdog.observers import Observer
@@ -80,31 +78,70 @@ except ImportError:
     BUTTONS_AVAILABLE = False
 ```
 
+**Note:** Standard library imports are NOT strictly grouped by stdlib/third-party boundaries (PIL is mixed in). Optional/hardware-dependent imports are consistently wrapped in `try/except ImportError`.
+
 **Path Aliases:**
-- No path aliases used (`@` imports or similar)
-- Absolute imports from installed packages only
+- Not used. All imports are absolute from installed packages.
 
 ## Error Handling
 
-**Patterns:**
-- Try/except with specific exception types preferred where possible (lines 423-425, 440-448)
-- Broad exception catching used in GPIO initialization (lines 285-299, 441-445) due to hardware variability
-- Bare `except:` only used in font loading fallback (line 548) - intentional graceful degradation
-- Exceptions with optional logging on non-critical failures (lines 298-299: `logging.warning`)
-- Critical exceptions logged as errors and re-raised (line 206-207: `logging.error`, then `raise`)
+**Strategy:**
+Tiered exception handling by severity, with graceful degradation for non-critical hardware failures and re-raise for critical initialization failures.
 
-**Exception handling strategy by context:**
-- Display initialization (line 190-207): Try/catch with logging and re-raise on critical errors
-- Button controller (line 285-299): Try/catch with warning log (non-critical, graceful fallback)
-- File operations (line 525-530): Try/catch with warning, fallback to defaults
-- Display updates (line 606-610): Try/except TypeError to handle API compatibility
-- Photo deletion (line 700-713): Try/catch per-file with error logging (don't stop batch process)
+**Patterns by context:**
+
+- **Critical initialization** (`inky_photo_frame.py` lines 190-207): Catch all exceptions, log as error, then re-raise. Application cannot continue without display.
+  ```python
+  try:
+      from inky.auto import auto
+      self._display = auto()
+      self._initialized = True
+  except Exception as e:
+      logging.error(f'❌ Failed to initialize display: {e}')
+      raise
+  ```
+
+- **Non-critical hardware** (`inky_photo_frame.py` lines 285-299): Catch all exceptions, log as warning, continue without feature.
+  ```python
+  try:
+      self.button_a = Button(gpio_a, bounce_time=0.02)
+      # ...
+  except Exception as e:
+      logging.warning(f'⚠️ Could not initialize buttons: {e}')
+      # graceful degradation: no buttons but service continues
+  ```
+
+- **API compatibility** (`inky_photo_frame.py` lines 606-610, 887-891): Catch `TypeError` only when handling optional method parameters across library versions.
+  ```python
+  try:
+      self.display.set_image(img, saturation=self.saturation)
+  except TypeError:
+      self.display.set_image(img)
+  ```
+
+- **Per-item batch operations** (`inky_photo_frame.py` lines 700-713): Catch all exceptions per item, log error, continue loop. Never abort a batch on a single failure.
+  ```python
+  try:
+      Path(photo_path).unlink()
+  except Exception as e:
+      logging.error(f'Error deleting {photo_path}: {e}')
+      # continue to next file
+  ```
+
+- **Bare `except:` blocks** (`inky_photo_frame.py` line 548): Used only for font loading fallback — intentional and documented pattern for graceful degradation on non-Pi systems.
+
+- **Recoverable error detection** (`inky_photo_frame.py` lines 243-245): String matching on error messages to classify GPIO/SPI errors as recoverable:
+  ```python
+  is_recoverable = any(x in error_msg for x in [
+      'gpio', 'spi', 'pins', 'transport', 'endpoint', 'busy'
+  ])
+  ```
 
 ## Logging
 
 **Framework:** Python's built-in `logging` module
 
-**Configuration (lines 152-160):**
+**Configuration (`inky_photo_frame.py` lines 152-160):**
 ```python
 logging.basicConfig(
     level=logging.INFO,
@@ -116,92 +153,120 @@ logging.basicConfig(
 )
 ```
 
-**Patterns:**
-- INFO level for major state changes (lines 187, 196, 297, etc.)
-- DEBUG level for detailed processing info (lines 859, 873, 889)
-- WARNING level for recoverable issues (lines 249-250, 299, 484)
-- ERROR level for failures affecting functionality (lines 206, 253, 390, 905)
-- Emoji prefixes used extensively for quick visual parsing:
-  - `🚀` for startup
-  - `✅` for success
-  - `❌` for errors
-  - `📺` for display operations
-  - `🎨` for color/visual operations
-  - `🧹` for cleanup
-  - `📁` for file operations
-  - `📸` for photo operations
-  - `⏰` for timing operations
-  - `🆕` for new items
-  - `👋` for shutdown
+**Log levels:**
+- `logging.info()` — major state changes, startup, success confirmations
+- `logging.debug()` — detailed processing (color mode details, saturation values)
+- `logging.warning()` — recoverable issues, degraded functionality (missing GPIO, retry attempts)
+- `logging.error()` — failures that affect functionality, exception messages
 
-**Log locations:**
-- File: `/home/pi/inky_photo_frame.log` (set in `LOG_FILE` constant)
-- Console: stdout (duplicated to both file and console)
+**Emoji prefix convention (visual parsing in logs):**
+- `🚀` startup sequence
+- `✅` success
+- `❌` error/failure
+- `📺` display operations
+- `🎨` color/visual processing
+- `🧹` cleanup operations
+- `📁` file/directory operations
+- `📸` photo detection/watcher
+- `⏰` timing/scheduling
+- `🆕` new photo immediate display
+- `👋` shutdown/stop
+- `📱` HEIF/iPhone photo support
+- `📚` history loading
+- `🗑️` storage cleanup/deletion
+- `🔥` warmth boost color mode
+- `✨` spectra palette application
+
+**Log destinations:**
+- File: `/home/pi/inky_photo_frame.log` (set via `LOG_FILE` constant at line 64)
+- Console: `sys.stdout` (duplicated to both handlers simultaneously)
 
 ## Comments
 
-**When to Comment:**
-- Block-level docstrings on all classes (e.g., lines 167-170, 263-271, 341-342, 397-398)
-- Method-level docstrings on most public methods (e.g., lines 181-182, 534-535, 612-613)
-- Inline comments used sparingly for non-obvious logic:
-  - Configuration sections clearly marked with `# ` headers (lines 99-101, 162-164)
-  - Explain "why" in complex sections (lines 243-245, 849-850)
+**Docstrings:**
+- All classes have module-level docstrings describing purpose and key behaviors
+- Most public methods have single-line or multi-line docstrings
+- Private helper methods (`_apply_spectra_palette`, `_apply_warmth_boost`) have multi-line docstrings explaining algorithm steps
 
-**JSDoc/TSDoc:**
-- Not applicable (Python codebase, no type hints)
-- Docstrings use simple summary format without formal tags
-- Example from line 821-822:
+**Example pattern:**
 ```python
 def process_image(self, image_path):
     """Process image for e-ink display with smart cropping and color correction"""
 ```
 
+**Section separators:**
+- Large banners used to separate major code sections:
+  ```python
+  # ============================================================================
+  # DISPLAY MANAGER - Singleton pattern for robust GPIO/SPI management
+  # ============================================================================
+  ```
+
+**Inline comments:**
+- Used to explain non-obvious logic: hardware quirks, algorithm steps, configuration reasons
+- File-level module docstring (lines 2-28) documents color mode options with visual alignment
+
+**Type hints:**
+- Not used. No type annotations in the codebase.
+
 ## Function Design
 
 **Size:**
-- Methods range from 2-3 lines (e.g., `get_display()`) to 80+ lines (e.g., `cleanup_old_photos()`)
-- Most utility methods 10-40 lines
-- Longer methods justified by data processing requirements (image processing, cleanup logic)
+- Utility methods: 2-15 lines (e.g., `get_display()`, `save_color_mode()`, `add_to_queue()`)
+- Business logic methods: 20-50 lines (e.g., `change_photo()`, `refresh_pending_list()`, `process_image()`)
+- Complex operations: 50-90 lines with justified complexity (e.g., `cleanup_old_photos()`, `display_welcome()`)
 
 **Parameters:**
-- Most methods 0-3 parameters (self + up to 2 args)
-- Some utility functions take configuration dicts (e.g., `retry_on_error()` with max_attempts, delay, backoff)
-- Private helper methods: Minimal parameters, often state-dependent through `self`
+- Methods take 0-3 parameters (always including `self`)
+- Decorator factory pattern for configuration: `retry_on_error(max_attempts=3, delay=1, backoff=2)`
+- Private helpers minimize parameters by relying on `self` state
 
-**Return Values:**
-- Boolean returns for success/failure (e.g., `display_photo()` returns True/False)
-- Photo path strings for navigation (e.g., `next_photo()` picks from list)
-- Dictionary returns for state/history (e.g., `load_history()` returns dict)
-- None returns acceptable for void operations (e.g., `save_history()`, `cleanup()`)
+**Return values:**
+- `bool` for success/failure: `display_photo()`, `next_photo()`, `previous_photo()`, `change_photo()`
+- `dict` for state data: `load_history()`
+- `str` for computed values: `get_ip_address()`
+- `None` for void operations: `save_history()`, `cleanup()`, `display_welcome()`
 
 ## Module Design
 
-**Exports:**
-- Single-file application, no explicit module structure
-- Entry point: `if __name__ == '__main__':` at end (lines 1209-1211)
-- Main execution: Creates instance and calls `frame.run()`
+**Architecture:**
+- Single-file application (`inky_photo_frame.py`) — no package structure
+- Entry point guard at bottom of file (`inky_photo_frame.py` lines 1209-1211):
+  ```python
+  if __name__ == '__main__':
+      frame = InkyPhotoFrame()
+      frame.run()
+  ```
 
 **Classes:**
-- Class-based architecture with singleton pattern for `DisplayManager` (lines 166-227)
-- Event handler class extending watchdog's `FileSystemEventHandler` (lines 341-396)
-- Main controller class `InkyPhotoFrame` (lines 397-1207) - ~800 lines
+- `DisplayManager` (lines 166-227): Singleton pattern via `__new__` override for GPIO/SPI lifecycle management
+- `ButtonController` (lines 263-336): Composition-based, receives `photo_frame` instance in constructor
+- `PhotoHandler` (lines 341-396): Extends `watchdog.FileSystemEventHandler`, uses timer debouncing
+- `InkyPhotoFrame` (lines 397-1207): Main controller (~800 lines), owns all business logic
 
-**Constants grouped at module level (lines 58-97):**
-- Path configurations
-- Timing configurations
-- Logging configurations
-- Color mode mappings
-- Display configurations (DISPLAY_CONFIGS dict structure)
+**Module-level constants (lines 58-150):**
+- Grouped semantically: paths, timing, color configuration, display configurations
+- `DISPLAY_CONFIGS` dict provides structured display type definitions with nested config:
+  ```python
+  DISPLAY_CONFIGS = {
+      'spectra_7.3': {
+          'name': '...',
+          'resolution': (800, 480),
+          'is_spectra': True,
+          'gpio_pins': {'button_a': 5, ...},
+          'detection': {'module_contains': 'e673'},
+      },
+      ...
+  }
+  ```
 
 ## Decorator Usage
 
-**Custom decorators:**
-- `@retry_on_error(max_attempts=3, delay=1, backoff=2)` decorator (lines 229-257)
-  - Implements exponential backoff
-  - Used on `display_photo()` for hardware reliability (line 877)
-  - Detects recoverable errors (GPIO, SPI, transport, endpoint, busy)
+**Custom `@retry_on_error` decorator (`inky_photo_frame.py` lines 229-257):**
+- Implements exponential backoff for GPIO/SPI resilience
+- Applied to `display_photo()` via `@retry_on_error(max_attempts=3, delay=1, backoff=2)` at line 877
+- Uses `@wraps(func)` to preserve function metadata
 
-**Pattern (lines 234-257):**
 ```python
 def retry_on_error(max_attempts=3, delay=1, backoff=2):
     """Decorator to retry operations on GPIO/SPI errors"""
@@ -212,7 +277,6 @@ def retry_on_error(max_attempts=3, delay=1, backoff=2):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
-                    # Recoverable error detection and retry logic
                     if is_recoverable and attempt < max_attempts:
                         wait_time = delay * (backoff ** (attempt - 1))
                         time_module.sleep(wait_time)
@@ -226,10 +290,24 @@ def retry_on_error(max_attempts=3, delay=1, backoff=2):
 ## Threading
 
 **Pattern:**
-- Uses `threading.Lock()` for safe history updates (line 434: `self.lock = threading.Lock()`)
-- Lock acquired in critical sections: `with self.lock:` (lines 636-638, 657, 720-751, 898-900, 924-944, 961-971, 991-1001, 1012-1025)
-- Timer threads used for debounced file processing (line 366: `threading.Timer(3.0, self.process_uploads)`)
-- Button press handlers use local `busy` flag for synchronization (lines 274, 303-308)
+- `threading.Lock()` instance: `self.lock = threading.Lock()` (`inky_photo_frame.py` line 434)
+- All history mutations wrapped in `with self.lock:` context manager
+- Timer-based debouncing for file system events: `threading.Timer(3.0, self.process_uploads)` (line 366)
+- Button handlers use local `self.busy` boolean flag to prevent re-entrant presses during display refresh
+- `DisplayManager` uses its own `self._lock = threading.Lock()` for singleton initialization safety
+
+## Shell Script Conventions
+
+**Files:** `install.sh`, `update.sh`, `uninstall.sh`, `diagnostic_report.sh`, `inky-photo-frame-cli`
+
+**Style:**
+- `set -e` at top of critical scripts (`install.sh`, `update.sh`) — exit on any error
+- ANSI color variables defined at top: `RED`, `GREEN`, `YELLOW`, `BLUE`, `NC`
+- Helper print functions: `print_status()`, `print_error()`, `print_info()` (consistent across all scripts)
+- Heredoc syntax used for multi-line content and systemd unit file generation
+- Variables in `UPPER_SNAKE_CASE`: `INSTALL_DIR`, `SERVICE_NAME`, `GITHUB_RAW`
+- Arrays for file lists: `FILES_TO_UPDATE=("file1" "file2")`
+- Case statement for CLI dispatch in `inky-photo-frame-cli`
 
 ---
 

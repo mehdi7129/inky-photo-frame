@@ -5,240 +5,294 @@
 ## Directory Layout
 
 ```
-/Users/mehdiguiard/Desktop/INKY_V2/
-├── inky_photo_frame.py         # Main application (1,211 lines)
-├── inky-photo-frame-cli        # CLI wrapper script for systemd management
-├── install.sh                  # Installation and system setup script
-├── update.sh                   # GitHub-based update script
-├── uninstall.sh                # Cleanup script
-├── diagnostic_report.sh        # System diagnostic tool
-├── requirements.txt            # Python dependencies
-├── logrotate.conf              # Log rotation configuration
+/Users/mehdiguiard/Desktop/INKY_V2/   (dev repo root)
+├── inky_photo_frame.py                # Main application (1,211 lines, all logic)
+├── inky-photo-frame-cli               # CLI wrapper script (bash, no extension)
+├── install.sh                         # Full Raspberry Pi installation script
+├── update.sh                          # GitHub-based update script
+├── uninstall.sh                       # Cleanup/removal script
+├── diagnostic_report.sh               # System diagnostic tool
+├── requirements.txt                   # Python dependency list
+├── logrotate.conf                     # Log rotation config (installed to /etc/logrotate.d/)
+├── .gitignore                         # Git exclusions
 ├── .planning/
-│   └── codebase/               # Analysis documents (this location)
-├── README.md                   # User documentation
-├── INSTALLATION_GUIDE.md       # Setup instructions
-├── SUMMARY.md                  # Project overview
-├── CHANGELOG.md                # Version history
-├── COLOR_CALIBRATION.md        # Color tuning reference
-└── LICENSE                     # MIT license
+│   ├── PROJECT.md                     # Project context and constraints
+│   ├── REQUIREMENTS.md                # Feature requirements
+│   ├── ROADMAP.md                     # v2.0 phase plan
+│   ├── STATE.md                       # Current progress state
+│   ├── config.json                    # GSD config
+│   ├── codebase/                      # GSD analysis documents (this directory)
+│   │   ├── ARCHITECTURE.md
+│   │   ├── STRUCTURE.md
+│   │   ├── CONVENTIONS.md
+│   │   ├── TESTING.md
+│   │   ├── STACK.md
+│   │   ├── INTEGRATIONS.md
+│   │   └── CONCERNS.md
+│   ├── phases/
+│   │   └── 01-pre-flight-hygiene/     # Phase 1 plan files
+│   └── research/
+│       ├── ARCHITECTURE.md
+│       ├── FEATURES.md
+│       ├── PITFALLS.md
+│       ├── STACK.md
+│       └── SUMMARY.md
+├── README.md                          # User documentation
+├── INSTALLATION_GUIDE.md              # Setup instructions (candidate for removal in Phase 1)
+├── SUMMARY.md                         # Project overview (to be removed in Phase 1)
+├── CHANGELOG.md                       # Version history
+├── COLOR_CALIBRATION.md               # Color tuning reference (to be removed in Phase 1)
+├── LICENSE                            # MIT license
+└── __pycache__/                       # Python bytecode cache (committed by mistake, fix in Phase 1)
+```
+
+**Installed on Raspberry Pi (runtime paths):**
+```
+/home/pi/
+├── inky-photo-frame/                  # Deployed application directory
+│   ├── inky_photo_frame.py            # Deployed from GitHub
+│   ├── inky-photo-frame-cli           # Deployed from GitHub
+│   ├── update.sh                      # Deployed from GitHub
+│   └── logrotate.conf                 # Deployed from GitHub
+├── Images/                            # Photo storage (SMB share)
+├── .inky_history.json                 # Photo display history (auto-created)
+├── .inky_color_mode.json              # Color mode preference (auto-created)
+├── .inky_credentials                  # SMB username+password (created by install.sh)
+├── .inky-backups/                     # Update backups (created by update.sh)
+└── .virtualenvs/pimoroni/             # Python virtual environment
+
+/home/pi/inky_photo_frame.log          # Application log (rotated by logrotate)
+
+/usr/local/bin/inky-photo-frame        # CLI command (symlinked from inky-photo-frame-cli)
+
+/etc/systemd/system/inky-photo-frame.service   # Systemd service unit
+/etc/logrotate.d/inky-photo-frame              # Logrotate config (from logrotate.conf)
 ```
 
 ## Directory Purposes
 
-**Root Directory:**
-- Purpose: Single-file monolithic Python application with bash utilities
-- Contains: Executable scripts, documentation, configuration
-- Key files: `inky_photo_frame.py` (application core), `inky-photo-frame-cli` (user commands)
+**Root Dev Directory:**
+- Purpose: Single-file monolithic Python application with bash utilities for Raspberry Pi
+- Contains: Executable scripts, configuration files, documentation
+- Key files: `inky_photo_frame.py` (all application code), `inky-photo-frame-cli` (user commands)
 
 **`.planning/codebase/`:**
-- Purpose: GSD analysis documents (auto-generated)
-- Contains: Architecture, structure, testing patterns, concerns
-- Key files: This is where ARCHITECTURE.md and STRUCTURE.md live
+- Purpose: GSD analysis documents (auto-generated by `/gsd:map-codebase`)
+- Contains: Architecture, structure, testing patterns, concerns, stack, integrations, conventions
+- Not to be manually edited
+
+**`.planning/phases/`:**
+- Purpose: Phase implementation plans (generated by `/gsd:plan-phase`)
+- Contains: One subdirectory per phase (e.g., `01-pre-flight-hygiene/`)
+
+**`.planning/research/`:**
+- Purpose: Domain research gathered before planning (e-ink display architecture, features, pitfalls)
+- Contains: ARCHITECTURE.md, FEATURES.md, PITFALLS.md, STACK.md, SUMMARY.md
 
 ## Key File Locations
 
 **Entry Points:**
 
-- `inky_photo_frame.py` (lines 1209-1211): Python application entry point
+- `inky_photo_frame.py` lines 1209-1211: Python application entry point
   ```python
   if __name__ == '__main__':
       frame = InkyPhotoFrame()
       frame.run()
   ```
 
-- `inky-photo-frame-cli` (lines 1-185): Command-line interface for user operations
-  - Delegates to systemd service: `sudo systemctl [start|stop|restart]`
-  - Displays logs: `journalctl -u inky-photo-frame -f`
-  - Updates from GitHub: Executes `update.sh`
+- `inky-photo-frame-cli` lines 1-185: Bash command-line interface
+  - Delegates to systemd: `sudo systemctl [start|stop|restart|status]`
+  - Streams logs: `journalctl -u inky-photo-frame -f`
+  - Triggers update: Executes `update.sh`
+  - Manages password: Generates random alphanumeric, updates smbpasswd
 
-- `install.sh`: Raspberry Pi system configuration
-  - Enables I2C/SPI interfaces
-  - Installs Python dependencies
-  - Configures systemd service
-  - Sets up SMB share
+- `install.sh` lines 1-405: One-time Raspberry Pi system configuration
+  - Enables I2C/SPI via raspi-config
+  - Installs system packages (samba, fonts-dejavu, liblgpio-dev, etc.)
+  - Creates Python venv at `~/.virtualenvs/pimoroni`
+  - Downloads application files from GitHub
+  - Configures SMB share and creates systemd service
+  - Installs CLI to `/usr/local/bin/inky-photo-frame`
 
-**Configuration:**
+**Configuration (runtime, on Raspberry Pi):**
 
 - `/home/pi/.inky_history.json`: Photo display history (JSON)
-  - Structure: shown[], pending[], current, last_change, photo_metadata
-  - Created by: `InkyPhotoFrame.__init__()` via `load_history()`
+  - Structure: `shown[]`, `pending[]`, `current`, `last_change`, `photo_metadata{}`
+  - Auto-created by `InkyPhotoFrame.__init__()` via `load_history()` if absent
+  - Thread-safe writes via `self.lock`
 
 - `/home/pi/.inky_color_mode.json`: Saved color mode preference (JSON)
-  - Structure: { "color_mode": "pimoroni|spectra_palette|warmth_boost" }
-  - Created by: `cycle_color_mode()` or `reset_color_mode()`
+  - Structure: `{ "color_mode": "pimoroni|spectra_palette|warmth_boost" }`
+  - Auto-created by `cycle_color_mode()` or `reset_color_mode()` on first use
 
-- `/home/pi/.inky_credentials`: SMB share credentials (plain text)
-  - Structure: Line 1 = username, Line 2 = password
-  - Created by: `install.sh` or `inky-photo-frame reset-password`
-  - Read by: `get_credentials()` (lines 521-532)
+- `/home/pi/.inky_credentials`: SMB share credentials (plain text, chmod 644)
+  - Structure: Line 1 = username (`inky`), Line 2 = password (random 10-char alphanumeric)
+  - Created by `install.sh`, updated by `inky-photo-frame reset-password`
+  - Read by `get_credentials()` (lines 521-532)
 
-- `/home/pi/inky_photo_frame.log`: Application log file
-  - Written by: Python logging (configured line 153-160)
-  - Rotated by: `/etc/logrotate.d/inky-photo-frame` (installed by install.sh)
+- `requirements.txt`: Python dependencies for reference (actual install is via pip in venv)
+  - Core: `inky[rpi,example-depends]>=1.5.0`, `Pillow>=10.0.0`, `watchdog>=3.0.0`
+  - GPIO: `lgpio>=0.2.0`, `RPi.GPIO>=0.7.0`, `gpiozero>=2.0.0`
+  - Optional: `pillow-heif>=0.13.0` (HEIC), `numpy>=1.24.0`
 
-**Core Logic:**
+**Core Logic (all in `inky_photo_frame.py`):**
 
-- `inky_photo_frame.py` - All application code is in this single file:
-  - **DisplayManager** (lines 166-228): Singleton for hardware init/cleanup
-  - **ButtonController** (lines 263-336): GPIO button event routing
-  - **PhotoHandler** (lines 341-395): File system watcher events
-  - **InkyPhotoFrame** (lines 397-1211): Main application class with all methods
+- **Constants/Config** (lines 58-150): `PHOTOS_DIR`, `HISTORY_FILE`, `COLOR_MODE_FILE`, `CHANGE_HOUR`, `CHANGE_INTERVAL_MINUTES`, `LOG_FILE`, `MAX_PHOTOS`, `VERSION`, `COLOR_MODE`, `SATURATION`, `SPECTRA_PALETTE`, `WARMTH_BOOST_CONFIG`, `DISPLAY_CONFIGS`
+- **DisplayManager** (lines 166-228): Singleton for hardware init/cleanup, threading lock
+- **retry_on_error** (lines 229-257): Decorator for exponential backoff on GPIO/SPI errors
+- **ButtonController** (lines 263-336): 4-button GPIO event routing with busy-lock
+- **PhotoHandler** (lines 341-395): Watchdog event handler, 3-second debounce upload
+- **InkyPhotoFrame** (lines 397-1207): Main class — all application logic
+  - `__init__()`: Init display, detect model, load history, init buttons
+  - `detect_display_saturation()`: Match display model from `DISPLAY_CONFIGS`
+  - `display_welcome()`: Render connection info to PIL Image
+  - `load/save_history()`: JSON persistence for photo queues
+  - `get_all_photos()`: Glob scan of `PHOTOS_DIR`
+  - `cleanup_old_photos()`: FIFO deletion when over `MAX_PHOTOS`
+  - `refresh_pending_list()`: Sync pending with filesystem, reset cycle if empty
+  - `_apply_spectra_palette()`: Floyd-Steinberg dithering to 6-color palette
+  - `_apply_warmth_boost()`: Per-channel RGB adjustments
+  - `process_image()`: Crop + resize + color mode pipeline
+  - `display_photo()`: Send to hardware with retry decorator
+  - `add_to_queue()`: Add photo to pending without displaying
+  - `display_new_photo()`: Immediate display of newly uploaded photo
+  - `change_photo()` / `next_photo()` / `previous_photo()`: Photo navigation
+  - `cycle_color_mode()` / `reset_color_mode()`: Color mode management
+  - `should_change_photo()`: Daily/interval schedule check
+  - `display_current_or_change()`: Startup logic
+  - `run()`: Main event loop with file watcher and scheduler
 
-**Display Rendering:**
+**Bash Utilities:**
 
-- `process_image()` (lines 821-875): Image loading, cropping, resizing
-- `_apply_spectra_palette()` (lines 753-792): 6-color palette quantization with dithering
-- `_apply_warmth_boost()` (lines 794-819): RGB channel adjustments for warmth
-- `display_photo()` (lines 877-906): Render to hardware with retry logic
+- `install.sh` (406 lines): Full system setup (run once)
+- `update.sh` (203 lines): Pull from GitHub, backup, redeploy, rollback on failure
+- `uninstall.sh` (80 lines): Remove service, files, optional user/photos
+- `diagnostic_report.sh`: System state diagnostic for troubleshooting
+- `inky-photo-frame-cli` (185 lines): User-facing CLI wrapper
 
-**Testing:**
+**Logs:**
 
-- No test files present in repository
-- See TESTING.md (if generated) for testing approach
+- `/home/pi/inky_photo_frame.log`: Application log
+  - Written by Python `logging.FileHandler`
+  - Rotated daily, 7 days retention, compressed, by logrotate
 
 ## Naming Conventions
 
 **Files:**
-
-- Python: `inky_photo_frame.py` (snake_case, descriptive)
-- Shell scripts: No extension (executable), descriptive names
-- Config files: Dot-prefixed for hidden status (`.inky_*`)
-- Logs: `inky_photo_frame.log` (matches application name)
+- Python: `snake_case.py` — `inky_photo_frame.py`
+- Bash scripts: No extension, kebab-case or snake_case — `inky-photo-frame-cli`, `install.sh`
+- Config files: Dot-prefixed when hidden runtime files — `.inky_history.json`, `.inky_color_mode.json`
+- Documentation: `UPPER_CASE.md` for planning, `Title_Case.md` for user docs
 
 **Directories:**
+- System paths: Lowercase absolute — `/home/pi/Images`, `/home/pi/inky-photo-frame`
+- Hidden configs: Dot-prefixed — `.inky_backups`, `.virtualenvs`
+- Planning: `.planning/` (hidden, organized by concern)
 
-- System paths: Lowercase, absolute `/home/pi/` for Raspberry Pi
-- Hidden configs: Dot-prefixed (`.inky_*`, `.inky_backups`)
-- Planning: `.planning/codebase/` (hidden, organized)
+**Classes (PascalCase):**
+- Suffix indicates role: `DisplayManager`, `ButtonController`, `PhotoHandler`
+- Main class: `InkyPhotoFrame` (application name)
 
-**Classes:**
-
-- Pascal case: `DisplayManager`, `InkyPhotoFrame`, `ButtonController`, `PhotoHandler`
-- Purpose in name: Manager, Controller, Handler suffixes clear responsibility
-
-**Functions:**
-
-- Snake case: `initialize()`, `cleanup()`, `display_photo()`, `process_image()`
-- Underscore prefix for internal: `_apply_spectra_palette()`, `_on_button_a()`
-- Decorators: `@retry_on_error()`, `@wraps()`
+**Functions/Methods (snake_case):**
+- Public: `initialize()`, `display_photo()`, `process_image()`, `cycle_color_mode()`
+- Private (underscore prefix): `_apply_spectra_palette()`, `_apply_warmth_boost()`, `_on_button_a()`
+- Event handlers: `on_created()` (watchdog), `when_pressed` callbacks (gpiozero)
+- Getters: `get_all_photos()`, `get_ip_address()`, `get_credentials()`
+- Loaders: `load_history()`, `load_color_mode()`
+- Savers: `save_history()`, `save_color_mode()`
 
 **Variables:**
-
-- Configuration constants: ALL_CAPS
-  - `PHOTOS_DIR`, `HISTORY_FILE`, `COLOR_MODE_FILE`, `CHANGE_HOUR`, `MAX_PHOTOS`
-- Instance variables: snake_case with self prefix
-  - `self.display`, `self.history`, `self.button_controller`
-- Module-level dicts: ALL_CAPS for config, camelCase for content
-  - `DISPLAY_CONFIGS`, `SPECTRA_PALETTE`, `WARMTH_BOOST_CONFIG`
-
-**Methods:**
-
-- Public APIs: `change_photo()`, `display_photo()`, `cycle_color_mode()`
-- Event handlers: `on_created()`, `when_pressed` callbacks
-- Getters/Loaders: `get_all_photos()`, `load_history()`, `load_color_mode()`
+- Module-level constants: `ALL_CAPS` — `PHOTOS_DIR`, `HISTORY_FILE`, `MAX_PHOTOS`, `VERSION`
+- Config dicts: `ALL_CAPS` — `DISPLAY_CONFIGS`, `SPECTRA_PALETTE`, `WARMTH_BOOST_CONFIG`
+- Instance variables: `self.snake_case` — `self.display`, `self.history`, `self.button_controller`
+- Thread primitives: `self.lock` (Lock), `self.busy` (bool flag in ButtonController)
 
 ## Where to Add New Code
 
-**New Feature - Photo Processing:**
-- Primary code: Add method to `InkyPhotoFrame` class (around lines 821-875)
-- Color mode: Add dict to top-level config section (lines 68-97)
-- Entry point: Add button handler or update `process_image()` logic
+**New Color Mode:**
+1. Add config dict constant in lines 68-97 (next to `SPECTRA_PALETTE`, `WARMTH_BOOST_CONFIG`)
+2. Add `_apply_<mode_name>()` method to `InkyPhotoFrame` around lines 753-819
+3. Add mode string to `modes` list in `cycle_color_mode()` (line 1037)
+4. Add processing branch in `process_image()` (lines 856-873)
+5. Add saturation logic in `detect_display_saturation()` if needed (lines 506-508)
 
-**New Feature - Hardware Control:**
-- GPIO buttons: Update `ButtonController.__init__()` and add `_on_button_x()` method (lines 272-335)
-- Display detection: Add to `DISPLAY_CONFIGS` dict (lines 103-150), update `detect_display_saturation()` (lines 450-508)
-- Error recovery: Update `retry_on_error()` decorator (lines 229-257)
+**New Display Model:**
+1. Add entry to `DISPLAY_CONFIGS` dict (lines 103-150) with `name`, `resolution`, `is_spectra`, `is_13inch`, `gpio_pins`, `detection`
+2. No other changes needed — `detect_display_saturation()` auto-matches via detection rules
 
-**New Feature - File Management:**
-- Upload handling: Modify `PhotoHandler` class (lines 341-395)
-- Photo discovery: Update `get_all_photos()` (lines 641-650) or `refresh_pending_list()` (lines 718-751)
-- Storage cleanup: Enhance `cleanup_old_photos()` (lines 652-716)
+**New CLI Command:**
+1. Add `case` branch in `inky-photo-frame-cli` (lines 91-184)
+2. Update `show_usage()` function at top of CLI script
 
-**New Feature - User Commands:**
-- CLI commands: Add case statement to `inky-photo-frame-cli` (lines 91-184)
-- Help text: Update `show_usage()` function in CLI script
+**New Button Action:**
+1. Add `_on_button_x()` method to `ButtonController` (lines 301-335)
+2. Attach handler in `ButtonController.__init__()` (line 294)
+3. Add corresponding public method to `InkyPhotoFrame`
 
-**New Utilities:**
-- Helper functions: Add to top of `InkyPhotoFrame` class before `__init__`
-- Decorators: Add near `retry_on_error()` (lines 229-257)
-- Module-level: Add to configuration section (lines 58-150)
+**New Image Format Support:**
+1. Add extension to `PhotoHandler.image_extensions` set (line 345)
+2. Add to `get_all_photos()` extension list (lines 643-644)
+3. Ensure Pillow or plugin handles the format (see HEIC example lines 421-425)
+
+**New Configuration Parameter:**
+1. Add constant near lines 59-74
+2. Document with inline comment
+3. Update `install.sh` README section if user-configurable
+
+**New Test File (Phase 6):**
+- Location: `tests/` directory (to be created in Phase 5)
+- Pattern: `test_<module_name>.py` (e.g., `test_image_processor.py`, `test_photos.py`)
+- Must mock hardware: conftest.py will mock `inky`, `gpiozero`, `RPi.GPIO`, `lgpio`
 
 ## Special Directories
 
-**`__pycache__/`:**
-- Purpose: Python bytecode cache (auto-generated by interpreter)
-- Generated: Yes (Python creates on import)
-- Committed: No (in .gitignore)
-- Safe to delete: Yes, will regenerate
+**`__pycache__/` (dev root):**
+- Purpose: Python bytecode cache
+- Generated: Yes (Python on import)
+- Committed: Yes — by mistake (tracked in git, Phase 1 fix removes it)
+- Safe to delete: Yes (regenerated on next run)
+- Fix: `git rm -r --cached __pycache__/` in Phase 1
 
 **`.planning/codebase/`:**
 - Purpose: GSD analysis documents
-- Generated: Yes (by /gsd:map-codebase command)
+- Generated: Yes (by `/gsd:map-codebase`)
 - Committed: Yes (part of planning workflow)
-- Manual edits: Not recommended (auto-generated)
+- Manual edits: Acceptable when needed for accuracy
+
+**`.planning/research/`:**
+- Purpose: Domain research (e-ink hardware, Pimoroni APIs, pitfalls)
+- Generated: Yes (by `/gsd:research`)
+- Committed: Yes
 
 **`.claude/`:**
 - Purpose: Claude IDE workspace metadata
-- Generated: Yes (Claude Code creates)
-- Committed: No (in .gitignore)
-- Safe to delete: Yes
+- Generated: Yes (Claude Code)
+- Committed: No (not in `.gitignore`, but should be — contains no useful project data)
 
 **`.git/`:**
-- Purpose: Git version control metadata
-- Generated: Yes (git init)
-- Committed: No (always ignored)
-- Safe to delete: No (loses history)
+- Purpose: Git version control
+- Generated: Yes
+- Committed: No
 
 ## Configuration Constants Reference
 
-**Key Configuration Lines:**
+All constants are module-level in `inky_photo_frame.py` lines 58-150:
 
-- `PHOTOS_DIR` (line 59): `/home/pi/Images` - Photo source location
-- `HISTORY_FILE` (line 60): `/home/pi/.inky_history.json` - State persistence
-- `COLOR_MODE_FILE` (line 61): `/home/pi/.inky_color_mode.json` - Mode preference
-- `CHANGE_HOUR` (line 62): `5` - Daily change time (5 AM)
-- `CHANGE_INTERVAL_MINUTES` (line 63): `0` - 0=daily, >0=every N minutes
-- `LOG_FILE` (line 64): `/home/pi/inky_photo_frame.log`
-- `MAX_PHOTOS` (line 65): `1000` - Storage limit before cleanup
-- `VERSION` (line 66): `"1.1.7"` - Current version string
-- `COLOR_MODE` (line 74): `'spectra_palette'` - Default color mode
-- `SATURATION` (line 77): `0.5` - Pimoroni default saturation
-
-**Display Configuration Constants:**
-
-- `DISPLAY_CONFIGS` (lines 103-150): Dict of display models
-  - Keys: `spectra_7.3`, `classic_7.3`, `spectra_13.3`
-  - Each contains: `name`, `resolution`, `is_spectra`, `is_13inch`, `gpio_pins`, `detection`
-
-**Color Profiles:**
-
-- `SPECTRA_PALETTE` (lines 81-88): RGB tuples for 6-color e-ink display
-- `WARMTH_BOOST_CONFIG` (lines 91-97): Enhancement multipliers for warmth mode
-
-## Organization Summary
-
-**Monolithic Structure (Single Python File):**
-- `inky_photo_frame.py` contains all classes, functions, and logic
-- No package structure (not needed for single-purpose application)
-- All dependencies imported at top (lines 30-48)
-
-**Script Utilities (Bash):**
-- `install.sh`: One-time setup (450+ lines)
-- `update.sh`: Version management
-- `uninstall.sh`: Cleanup
-- `diagnostic_report.sh`: Troubleshooting
-- `inky-photo-frame-cli`: User interface
-
-**Data Persistence (JSON Files):**
-- History and preferences stored in `/home/pi/.inky_*` files
-- No database (JSON sufficient for single-device use)
-- SMB credentials in plain text (Raspberry Pi local-only)
-
-**Documentation:**
-- User guides: README.md, INSTALLATION_GUIDE.md
-- Technical: COLOR_CALIBRATION.md, SUMMARY.md
-- Version tracking: CHANGELOG.md
+| Constant | Line | Value | Purpose |
+|----------|------|-------|---------|
+| `PHOTOS_DIR` | 59 | `/home/pi/Images` | Photo source location |
+| `HISTORY_FILE` | 60 | `/home/pi/.inky_history.json` | State persistence |
+| `COLOR_MODE_FILE` | 61 | `/home/pi/.inky_color_mode.json` | Mode preference |
+| `CHANGE_HOUR` | 62 | `5` | Daily change hour (5 AM) |
+| `CHANGE_INTERVAL_MINUTES` | 63 | `0` | 0=daily mode, >0=every N minutes |
+| `LOG_FILE` | 64 | `/home/pi/inky_photo_frame.log` | Log path |
+| `MAX_PHOTOS` | 65 | `1000` | Max photos before FIFO cleanup |
+| `VERSION` | 66 | `"1.1.7"` | Current version string |
+| `COLOR_MODE` | 74 | `'spectra_palette'` | Default color mode |
+| `SATURATION` | 77 | `0.5` | Pimoroni default saturation |
+| `DISPLAY_CONFIGS` | 103-150 | Dict | Per-model display parameters |
+| `SPECTRA_PALETTE` | 81-88 | Dict | Calibrated 6-color RGB values |
+| `WARMTH_BOOST_CONFIG` | 91-97 | Dict | Warmth enhancement multipliers |
 
 ---
 

@@ -4,135 +4,129 @@
 
 ## APIs & External Services
 
-**Display Hardware:**
-- Pimoroni Inky Impression - E-ink display control via GPIO/SPI
-  - SDK/Client: `inky` Python package
-  - Connection: SPI (hardware interface)
-  - Auto-detection: `inky.auto.auto()` at line 191 of `inky_photo_frame.py`
+**GitHub (update distribution):**
+- Used as a raw file host — NOT a git workflow on-device
+- Base URL: `https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/`
+- Used by: `install.sh` (lines 171-179) and `update.sh` (lines 75-91)
+- Files fetched: `inky_photo_frame.py`, `update.sh`, `inky-photo-frame-cli`, `logrotate.conf`
+- Tool: `curl -sSL` — no auth, public repo assumed
+- No API key required; no GitHub API calls; no webhooks
 
-**System IP Detection:**
-- Local network socket query (no external API)
-  - Method: UDP socket to get local IP at line 513 of `inky_photo_frame.py`
-  - No external dependency - uses Python `socket` module
+**No other external APIs are used.** The application is entirely self-contained on the local network.
+
+## Hardware Interfaces
+
+**Pimoroni Inky display (SPI/I2C):**
+- SDK/Client: `inky` Python package (`inky[rpi,example-depends]` >= 1.5.0)
+- Connection: SPI bus (requires `dtoverlay=spi0-1cs,cs0_pin=7`) + I2C (display detection)
+- Entry point: `from inky.auto import auto` → `auto()` in `DisplayManager.initialize()` (`inky_photo_frame.py` line 191)
+- API used: `display.set_image(img, saturation=float)` and `display.show()`
+- Retry wrapper: `@retry_on_error(max_attempts=3, delay=1, backoff=2)` on `display_photo()`
+- Cleanup: `display._spi.close()` in `DisplayManager.cleanup()` on exit signals
+
+**GPIO buttons (gpiozero via lgpio):**
+- SDK/Client: `gpiozero` >= 2.0.0, backend: `lgpio` >= 0.2.0 (or `RPi.GPIO` fallback)
+- Pins vary by display model (from `DISPLAY_CONFIGS` in `inky_photo_frame.py` lines 103-150):
+  - 7.3" displays: Button A=GPIO5, B=GPIO6, C=GPIO16, D=GPIO24
+  - 13.3" display: Button A=GPIO5, B=GPIO6, C=GPIO25, D=GPIO24 (C shifted due to CS1 conflict)
+- API used: `Button(pin, bounce_time=0.02)` + `.when_pressed` callback
+- Optional: guarded by `BUTTONS_AVAILABLE` boolean; app runs without buttons
 
 ## Data Storage
 
-**File Storage:**
-- Local filesystem only
-  - Photo directory: `/home/pi/Images` (SMB-accessible network location)
-  - History file: `/home/pi/.inky_history.json` (JSON state persistence)
-  - Color mode file: `/home/pi/.inky_color_mode.json` (Runtime settings)
-  - Log file: `/home/pi/inky_photo_frame.log` (Activity logging)
-  - Credentials file: `/home/pi/.inky_credentials` (SMB user credentials)
+**Databases:** None.
 
-**Databases:**
-- None - Application uses file-based JSON state management
+**File Storage (local filesystem only):**
+- Photo directory: `/home/pi/Images` — primary storage, SMB-writable, watchdog-monitored
+- History file: `/home/pi/.inky_history.json` — JSON object with keys: `shown`, `pending`, `current`, `last_change`, `photo_metadata`
+- Color mode file: `/home/pi/.inky_color_mode.json` — JSON: `{"color_mode": "spectra_palette"}`
+- Log file: `/home/pi/inky_photo_frame.log` — plain text, rotated by logrotate
+- Credentials file: `/home/pi/.inky_credentials` — plain text, 2 lines (username, password)
+- Backups: `/home/pi/.inky-backups/` — created by `update.sh` (last 5 kept)
 
-**Caching:**
-- Photo rotation history: In-memory + JSON persistence
-- Color mode preference: Single JSON config file
+**Caching:** None external. Photo rotation state is in-memory (`InkyPhotoFrame.history` dict) with periodic JSON flush.
 
 ## Authentication & Identity
 
-**Auth Provider:**
-- Local SMB (Samba) authentication
-  - Implementation: Linux user account via `smbpasswd` at line 225-230 of `install.sh`
-  - Default user: `inky` (configurable via `USER_NAME` variable at line 18 of `install.sh`)
-  - Fallback user: `pi` (also enabled for SMB access at line 229)
-  - Password: Auto-generated 10-character alphanumeric at line 20 of `install.sh`
-  - Persistence: Stored in `/home/pi/.inky_credentials` (username on line 1, password on line 2)
+**Auth Provider:** Local Samba (no external identity provider)
+- Implementation: Linux system users + `smbpasswd` (lines 225-230 of `install.sh`)
+- Default SMB user: `inky` (+ `pi` as secondary user)
+- Password: auto-generated 10-character alphanumeric via `/dev/urandom` at install time
+- Credentials storage: `/home/pi/.inky_credentials` (plaintext, chmod 644)
+- Password reset: `inky-photo-frame reset-password` command in `inky-photo-frame-cli`
+- Credentials displayed on Inky welcome screen for user convenience (read via `get_credentials()`)
 
-**Credential Management:**
-- No external auth service required
-- Single-user local Samba share
-- Credentials displayed on welcome screen for user access
+## File Sharing (SMB/Samba)
 
-## File Sharing & Network Access
+**Incoming photo uploads:**
+- Protocol: SMB/CIFS (Samba)
+- Share name: `Images`
+- Path: `/home/pi/Images`
+- Users: `inky` and `pi` (both have write access)
+- iOS compatibility: `vfs objects = fruit streams_xattr`, `fruit:model = MacSamba`
+- No authentication beyond local Samba user — no LDAP, no AD, no Kerberos
+- Upload detection: `watchdog` `Observer` watches `/home/pi/Images` non-recursively
 
-**SMB/CIFS Protocol:**
-- Samba server configuration added at line 190 of `install.sh`
-- Share name: `Images` (maps to `/home/pi/Images`)
-- Access: Network file sharing for photo uploads from phones/computers
-- Restart: `systemctl restart smbd` at line 241 of `install.sh`
-
-**Network Services:**
-- SMB share: `smb://[ip-address]`
-- Hostname discovery: Local network only (no central registry)
-- No DNS integration required
+**Network addressing:**
+- IP displayed on welcome screen; detected at runtime by `get_ip_address()` using UDP socket trick:
+  `socket.connect(("8.8.8.8", 80))` then `getsockname()` — does NOT actually make network call
+- No DNS or mDNS registration; users connect by IP address directly
 
 ## Monitoring & Observability
 
-**Error Tracking:**
-- Local application logging (no external service)
-  - Handler: Python `logging` module
-  - Configuration: Line 39 of `inky_photo_frame.py`
-  - Log file: `/home/pi/inky_photo_frame.log`
+**Error Tracking:** None external. All errors logged locally.
 
-**Logs:**
-- Systemd journal integration:
-  - `StandardOutput=journal` and `StandardError=journal` in service file at line 259-260 of `install.sh`
-  - View: `journalctl -u inky-photo-frame -f`
-- Logrotate rotation:
-  - Config: `/etc/logrotate.d/inky-photo-frame` (7-day retention)
-  - Installed at line 268-270 of `install.sh`
+**Logging:**
+- Library: Python `logging` module (stdlib)
+- Level: `INFO` (default)
+- Format: `%(asctime)s - %(message)s`
+- Handlers: dual — `FileHandler('/home/pi/inky_photo_frame.log')` + `StreamHandler(stdout)`
+- Systemd journal: `StandardOutput=journal` in service unit (aggregates stdout)
+- View live: `journalctl -u inky-photo-frame -f` or `inky-photo-frame logs`
+- Log rotation: `/etc/logrotate.d/inky-photo-frame` — daily, 7 days, compressed
 
 ## CI/CD & Deployment
 
-**Hosting:**
-- Raspberry Pi (bare metal deployment)
-- Auto-start: systemd service `inky-photo-frame.service` at `/etc/systemd/system/inky-photo-frame.service`
+**Hosting:** Raspberry Pi bare metal — no cloud hosting.
 
-**Updates:**
-- GitHub repository updates:
-  - Download script: `update.sh` downloads latest files from `https://raw.githubusercontent.com/mehdi7129/inky-photo-frame/main/`
-  - CLI command: `inky-photo-frame update` triggers update process
-  - In-place update: No downtime required
+**CI Pipeline:** None currently in place. Research documents (`/Users/mehdiguiard/Desktop/INKY_V2/.planning/research/STACK.md`) recommend GitHub Actions for future CI.
 
-**CI Pipeline:**
-- Not detected - Manual updates via GitHub releases
+**Deployment process:**
+1. `curl -sSL .../install.sh | bash` — one-shot bootstrap on new Pi
+2. `inky-photo-frame update` (or `update.sh`) — pulls raw files from GitHub, stops service, replaces files, restarts
+3. Rollback: `update.sh` creates timestamped backup in `/home/pi/.inky-backups/`; restores on failure
+
+**Installed binary files:**
+- `/home/pi/inky-photo-frame/inky_photo_frame.py` — main application
+- `/home/pi/inky-photo-frame/update.sh` — update script
+- `/home/pi/inky-photo-frame/inky-photo-frame-cli` — CLI tool source
+- `/usr/local/bin/inky-photo-frame` — CLI command (symlinked from above)
+- `/etc/systemd/system/inky-photo-frame.service` — systemd unit
+- `/etc/logrotate.d/inky-photo-frame` — log rotation config
+- `/etc/systemd/system/disable-leds.service` — LED suppression service
 
 ## Environment Configuration
 
-**Required env vars:**
-- `INKY_SKIP_GPIO_CHECK=1` - Set at line 32 of `inky_photo_frame.py` to suppress GPIO check warnings
+**Required env vars (set by the application itself):**
+- `INKY_SKIP_GPIO_CHECK=1` — set in `inky_photo_frame.py` line 32 before any imports; prevents Inky library GPIO check from failing on non-Pi machines
 
-**Optional env vars:**
-- None detected - Configuration via Python constants in `inky_photo_frame.py`
+**Required for CI/testing (not set in production):**
+- `GPIOZERO_PIN_FACTORY=mock` — enables gpiozero's built-in MockFactory for unit tests
 
 **Secrets location:**
-- `.inky_credentials` file at `/home/pi/.inky_credentials` (local SMB credentials)
-- No external secret manager required
-
-## System Services
-
-**Service Management:**
-- systemd service: `inky-photo-frame` at `/etc/systemd/system/inky-photo-frame.service`
-- User context: Runs as `pi` user (line 253 of `install.sh`)
-- Working directory: `/home/pi/inky-photo-frame`
-- Python interpreter: `/home/pi/.virtualenvs/pimoroni/bin/python`
-- Restart policy: Always restart with 10-second delay (line 257-258 of `install.sh`)
-
-**GPIO & Hardware:**
-- GPIO pin configuration: Device tree overlay `dtoverlay=spi0-1cs,cs0_pin=7` (line 87, 97 of `install.sh`)
-- Button pins: Configured per display type in `DISPLAY_CONFIGS` at lines 103-150 of `inky_photo_frame.py`
-  - 7.3" displays: GPIO 5, 6, 16, 24
-  - 13.3" display: GPIO 5, 6, 25, 24 (different C pin due to CS1 conflict)
+- `/home/pi/.inky_credentials` — local SMB username + password (not a secret manager)
+- No cloud secrets, no API tokens, no .env file
 
 ## Webhooks & Callbacks
 
-**Incoming:**
-- None - Application is display-only with no incoming webhook support
+**Incoming webhooks:** None.
 
-**Outgoing:**
-- None - No external API calls or webhook delivery
+**Outgoing webhooks:** None.
 
-## File System Events
-
-**Watched Directory:**
-- Path: `/home/pi/Images`
-- Monitored by: `watchdog.observers.Observer` (line 41-42 of `inky_photo_frame.py`)
-- Trigger: `FileSystemEventHandler` for `on_created` events (new photo detection)
-- Supported formats: JPG, PNG, HEIC (iPhone support via pillow-heif)
+**Internal event callbacks (not webhooks):**
+- `watchdog` `FileSystemEventHandler.on_created()` → fires on new file in `/home/pi/Images`
+- `gpiozero` `Button.when_pressed` → fires on GPIO pin state change
+- `threading.Timer` (3-second debounce) → coalesces rapid upload events before display
 
 ---
 
