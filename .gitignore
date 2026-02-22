@@ -8,6 +8,38 @@ env/
 venv/
 .venv/
 
+# Distribution / packaging
+*.egg-info/
+*.egg
+dist/
+build/
+sdist/
+develop-eggs/
+eggs/
+wheels/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
+.env
+.env.*
+
 # Logs
 *.log
 logs/
