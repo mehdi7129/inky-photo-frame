@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Inky Photo Frame - Digital photo frame for Inky Impression 7.3"
+Inky Photo Frame - Universal E-Ink Photo Frame for Inky Impression
 Displays photos from SMB share with immediate display of new photos
-Changes daily at 5AM with intelligent rotation
+Changes daily at 5AM (or every N minutes via CHANGE_INTERVAL_MINUTES) with intelligent rotation
 
 Version: 1.1.7
 
@@ -59,7 +59,8 @@ except ImportError:
 PHOTOS_DIR = Path('/home/pi/Images')
 HISTORY_FILE = Path('/home/pi/.inky_history.json')
 COLOR_MODE_FILE = Path('/home/pi/.inky_color_mode.json')
-CHANGE_HOUR = 5  # Daily change hour (5AM)
+CHANGE_HOUR = 5  # Daily change hour (5AM) - used when CHANGE_INTERVAL_MINUTES is 0
+CHANGE_INTERVAL_MINUTES = 0  # 0 = daily mode (change at CHANGE_HOUR), >0 = change every N minutes
 LOG_FILE = '/home/pi/inky_photo_frame.log'
 MAX_PHOTOS = 1000  # Maximum number of photos to keep (auto-delete oldest)
 VERSION = "1.1.7"
@@ -122,8 +123,8 @@ DISPLAY_CONFIGS = {
         'is_spectra': False,
         'is_13inch': False,
         'gpio_pins': {
-            'button_a': 5,   
-            'button_b': 6, 
+            'button_a': 5,
+            'button_b': 6,
             'button_c': 16,
             'button_d': 24,
         },
@@ -139,7 +140,7 @@ DISPLAY_CONFIGS = {
         'gpio_pins': {
             'button_a': 5,
             'button_b': 6,
-            'button_c': 25,
+            'button_c': 25,   # GPIO 16 is used by display CS1 on 13.3"
             'button_d': 24,
         },
         'detection': {
@@ -282,7 +283,7 @@ class ButtonController:
 
         # Initialize buttons with 20ms debouncing
         try:
-            self.button_a = Button(gpio_a, bounce_time=0.02) 
+            self.button_a = Button(gpio_a, bounce_time=0.02)
             self.button_b = Button(gpio_b, bounce_time=0.02)
             self.button_c = Button(gpio_c, bounce_time=0.02)
             self.button_d = Button(gpio_d, bounce_time=0.02)
@@ -456,7 +457,7 @@ class InkyPhotoFrame:
         Auto-detect display model and return optimal saturation
         Different Inky models have different color palettes and need different saturations
         Sets self.display_config with all display-specific properties
-        Returns: (saturation)
+        Returns: saturation value
         """
         display_class = type(self.display).__name__
         display_module = str(type(self.display).__module__).lower()
@@ -483,7 +484,7 @@ class InkyPhotoFrame:
                     self.display_config = config
                     break
 
-        # If no match found, create a minimal config from resolution
+        # If no match found, create a minimal config
         if not self.display_config:
             logging.warning(f'⚠️ Unknown display: {self.width}x{self.height}')
             self.display_config = {
@@ -501,7 +502,7 @@ class InkyPhotoFrame:
 
         # Set convenient attributes for backward compatibility
         self.is_spectra = self.display_config['is_spectra']
-        self.is_13inch = self.display_config['is_13inch']
+        self.is_13inch = self.display_config.get('is_13inch', False)
 
         logging.info(f'📺 Detected: {self.display_config["name"]}')
         logging.info(f'📊 GPIO pins: {self.display_config["gpio_pins"]}')
@@ -1097,7 +1098,12 @@ class InkyPhotoFrame:
             logging.error(f'Error saving color mode: {e}')
 
     def should_change_photo(self):
-        """Check if it's time for daily photo change"""
+        """Check if it's time for a photo change
+
+        Two modes:
+        - CHANGE_INTERVAL_MINUTES = 0: Daily mode, change once at CHANGE_HOUR
+        - CHANGE_INTERVAL_MINUTES > 0: Interval mode, change every N minutes
+        """
         now = datetime.now()
 
         # Check if we've never changed
@@ -1107,9 +1113,14 @@ class InkyPhotoFrame:
         # Parse last change time
         last_change = datetime.fromisoformat(self.history['last_change'])
 
-        # Check if it's past CHANGE_HOUR and we haven't changed today
-        if now.hour >= CHANGE_HOUR and last_change.date() < now.date():
-            return True
+        if CHANGE_INTERVAL_MINUTES > 0:
+            # Interval mode: change every N minutes
+            elapsed = (now - last_change).total_seconds() / 60
+            return elapsed >= CHANGE_INTERVAL_MINUTES
+        else:
+            # Daily mode: change once at CHANGE_HOUR
+            if now.hour >= CHANGE_HOUR and last_change.date() < now.date():
+                return True
 
         return False
 
@@ -1137,7 +1148,10 @@ class InkyPhotoFrame:
 
     def run(self):
         """Main loop with file watching"""
-        logging.info(f'⏰ Daily change time: {CHANGE_HOUR:02d}:00')
+        if CHANGE_INTERVAL_MINUTES > 0:
+            logging.info(f'⏰ Photo change interval: every {CHANGE_INTERVAL_MINUTES} minutes')
+        else:
+            logging.info(f'⏰ Daily change time: {CHANGE_HOUR:02d}:00')
         logging.info(f'📁 Watching folder: {PHOTOS_DIR}')
         logging.info(f'🗄️ Storage limit: {MAX_PHOTOS} photos (auto-cleanup enabled)')
 
