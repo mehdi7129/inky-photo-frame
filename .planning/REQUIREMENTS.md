@@ -16,7 +16,7 @@ Requirements for v2.0 release. Each maps to roadmap phases.
 
 ### Code Structure
 
-- [ ] **STRC-01**: `inky_photo_frame.py` split into package with modules: config, display, image_processor, photos, buttons, welcome, app
+- [x] **STRC-01**: `inky_photo_frame.py` split into package with modules: config, display, image_processor, photos, buttons, welcome, app
 - [ ] **STRC-02**: `inky_photo_frame.py` retained as backward-compatible 3-line shim launcher
 - [ ] **STRC-03**: `update.sh` updated to download and deploy new package file structure
 - [ ] **STRC-04**: systemd service continues working transparently after modularization (no ExecStart path change)
@@ -74,7 +74,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HYGN-02 | Phase 1 | Complete |
 | HYGN-03 | Phase 1 | Complete |
 | HYGN-04 | Phase 2 | Complete |
-| STRC-01 | Phase 3 | Pending |
+| STRC-01 | Phase 3 | Complete |
 | STRC-02 | Phase 3 | Pending |
 | STRC-03 | Phase 4 | Pending |
 | STRC-04 | Phase 3 | Pending |

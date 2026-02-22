@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Photos display reliably on the e-ink screen with correct colors, and the system just works after installation
-**Current focus:** Phase 2 complete. CHANGELOG rewrite and GitHub Release draft done. Ready for Phase 3.
+**Current focus:** Phase 3 in progress. Config module extracted as package foundation. Next: display.py and buttons.py extraction.
 
 ## Current Position
 
-Phase: 2 of 6 (Release Preparation) -- COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase Complete
-Last activity: 2026-02-22 — Completed 02-02 (GitHub Release v2.0.0 draft)
+Phase: 3 of 6 (Module Extraction)
+Plan: 1 of 3 in current phase
+Status: Executing
+Last activity: 2026-02-22 — Completed 03-01 (Config module extraction)
 
-Progress: [████░░░░░░] 40%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 2min
-- Total execution time: 0.12 hours
+- Total execution time: 0.15 hours
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: [████░░░░░░] 40%
 |-------|-------|-------|----------|
 | 01-pre-flight-hygiene | 2 | 4min | 2min |
 | 02-release-preparation | 2 | 3min | 1.5min |
+| 03-module-extraction | 1 | 2min | 2min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2min), 01-02 (2min), 02-01 (2min), 02-02 (1min)
+- Last 5 plans: 01-02 (2min), 02-01 (2min), 02-02 (1min), 03-01 (2min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -55,6 +56,9 @@ Recent decisions affecting current work:
 - [02-01]: Pre-v1.0 beta entry removed; its features attributed to v1.0.0 initial release
 - [02-02]: Accepted auto-tag behavior from gh release create; v2.0.0 tag to be moved to final commit at publication
 - [02-02]: Release notes written in present tense as if all work is complete, per user decision
+- [03-01]: VERSION bumped from 1.1.7 to 2.0.0 in config.py
+- [03-01]: setup_logging() is a callable function, never invoked at import time
+- [03-01]: os.environ INKY_SKIP_GPIO_CHECK set before all imports in config.py
 
 ### Pending Todos
 
@@ -68,5 +72,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 02-02-PLAN.md (GitHub Release v2.0.0 draft). Phase 2 complete (2 of 2 plans done).
+Stopped at: Completed 03-01-PLAN.md (Config module extraction). Phase 3 in progress (1 of 3 plans done).
 Resume file: None
