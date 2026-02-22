@@ -46,7 +46,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Rewrite CHANGELOG.md in Keep a Changelog format (v1.0.0 through v2.0.0)
+- [x] 02-01-PLAN.md — Rewrite CHANGELOG.md in Keep a Changelog format (v1.0.0 through v2.0.0)
 - [ ] 02-02-PLAN.md — Draft GitHub Release v2.0.0 notes and create release draft
 
 ### Phase 3: Module Extraction
@@ -121,8 +121,8 @@ Note: Phase 2 (Release Preparation) can be worked in parallel with Phase 3 (Modu
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Pre-flight Hygiene | 1/2 | Complete    | 2026-02-22 |
-| 2. Release Preparation | 0/2 | Not started | - |
+| 1. Pre-flight Hygiene | 2/2 | Complete    | 2026-02-22 |
+| 2. Release Preparation | 1/2 | In progress | - |
 | 3. Module Extraction | 0/3 | Not started | - |
 | 4. Migration Validation | 0/2 | Not started | - |
 | 5. CI Foundation | 0/3 | Not started | - |
