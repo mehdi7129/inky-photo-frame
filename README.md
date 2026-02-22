@@ -199,10 +199,43 @@ The Pi will automatically connect to the new WiFi network on boot!
 | LCD Digital Frame | 5-10W | ~13€ |
 | LED Light Bulb | 7W | ~9€ |
 
-## 🛠️ Advanced Configuration
+## 🛠️ CLI Commands
+
+```bash
+inky-photo-frame status          # Check service status
+inky-photo-frame logs            # Watch live logs
+inky-photo-frame restart         # Restart the service
+inky-photo-frame update          # Update to latest version
+inky-photo-frame info            # Show system information
+inky-photo-frame reset-password  # Generate new SMB password
+inky-photo-frame help            # Show all commands
+```
+
+## 🏗️ Project Structure
+
+```
+inky-photo-frame/
+├── inky_photo_frame.py          # Entry point shim (systemd compatible)
+├── inky_photo_frame/            # Python package (v2.0)
+│   ├── __init__.py              # Package marker, exports __version__
+│   ├── __main__.py              # python -m support
+│   ├── config.py                # All constants, display configs, setup_logging()
+│   ├── display.py               # DisplayManager singleton, retry decorator
+│   ├── image_processor.py       # Image processing pipeline
+│   ├── photos.py                # PhotoHandler, file utilities
+│   ├── buttons.py               # GPIO button controller
+│   ├── welcome.py               # Welcome screen rendering
+│   └── app.py                   # InkyPhotoFrame orchestrator
+├── install.sh                   # One-line installer
+├── update.sh                    # Update from GitHub
+├── inky-photo-frame-cli         # CLI wrapper
+└── logrotate.conf               # Log rotation config
+```
+
+## ⚙️ Advanced Configuration
 
 ### Change Photo Rotation Time
-Edit `/home/pi/inky-photo-frame/inky_photo_frame.py`:
+Edit `/home/pi/inky-photo-frame/inky_photo_frame/config.py`:
 
 ```python
 CHANGE_HOUR = 5  # Change daily at this hour (24h format)
@@ -213,7 +246,7 @@ PHOTOS_DIR = Path('/home/pi/Images')  # Photo storage location
 
 **Choose the best color rendering for your photos!**
 
-Edit `/home/pi/inky-photo-frame/inky_photo_frame.py` and change `COLOR_MODE` (line 44):
+Edit `/home/pi/inky-photo-frame/inky_photo_frame/config.py` and change `COLOR_MODE`:
 
 #### **Mode 1: `spectra_palette`** ⭐ RECOMMENDED for Spectra 6
 ```python
@@ -244,13 +277,13 @@ COLOR_MODE = 'pimoroni'
 
 **How to apply:**
 ```bash
-# 1. Edit the file
-nano /home/pi/inky-photo-frame/inky_photo_frame.py
+# 1. Edit the config
+nano /home/pi/inky-photo-frame/inky_photo_frame/config.py
 
-# 2. Change COLOR_MODE on line 44
+# 2. Change COLOR_MODE
 
 # 3. Restart the service
-sudo systemctl restart inky-photo-frame
+inky-photo-frame restart
 ```
 
 💡 **Tip**: Try all 3 modes to see which renders your photos best!
@@ -268,20 +301,23 @@ sudo raspi-config nonint do_spi 0
 sudo reboot
 ```
 
-## 📝 Commands
+## 📝 Manual Commands
 
 ```bash
 # Check status
-sudo systemctl status inky-photo-frame
+inky-photo-frame status
 
 # View logs
-sudo journalctl -u inky-photo-frame -f
+inky-photo-frame logs
 
 # Restart service
-sudo systemctl restart inky-photo-frame
+inky-photo-frame restart
 
 # Manual test
 python3 /home/pi/inky-photo-frame/inky_photo_frame.py
+
+# Run as module
+python3 -m inky_photo_frame
 ```
 
 ## 🤝 Contributing
