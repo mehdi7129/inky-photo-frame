@@ -95,6 +95,59 @@ WARMTH_BOOST_CONFIG = {
     'saturation': 0.3       # Very low saturation for Spectra
 }
 
+# ============================================================================
+# DISPLAY CONFIGURATION - Structured display type definitions
+# ============================================================================
+
+DISPLAY_CONFIGS = {
+    'spectra_7.3': {
+        'name': 'Inky Impression 7.3" Spectra 2025 (6 colors)',
+        'resolution': (800, 480),
+        'is_spectra': True,
+        'is_13inch': False,
+        'gpio_pins': {
+            'button_a': 5,
+            'button_b': 6,
+            'button_c': 16,
+            'button_d': 24,
+        },
+        'detection': {
+            'module_contains': 'e673',
+            'class_contains': 'E673',
+        },
+    },
+    'classic_7.3': {
+        'name': 'Inky Impression 7.3" Classic (7 colors)',
+        'resolution': (800, 480),
+        'is_spectra': False,
+        'is_13inch': False,
+        'gpio_pins': {
+            'button_a': 5,   
+            'button_b': 6, 
+            'button_c': 16,
+            'button_d': 24,
+        },
+        'detection': {
+            'resolution': (800, 480),
+        },
+    },
+    'spectra_13.3': {
+        'name': 'Inky Impression 13.3" 2025 (6 colors)',
+        'resolution': (1600, 1200),
+        'is_spectra': True,
+        'is_13inch': True,
+        'gpio_pins': {
+            'button_a': 5,
+            'button_b': 6,
+            'button_c': 25,
+            'button_d': 24,
+        },
+        'detection': {
+            'resolution': (1600, 1200),
+        },
+    },
+}
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -209,21 +262,30 @@ def retry_on_error(max_attempts=3, delay=1, backoff=2):
 class ButtonController:
     """
     Handles 4 GPIO buttons for photo frame control
-    - Button A (GPIO 5): Next photo
-    - Button B (GPIO 6): Previous photo
-    - Button C (GPIO 16): Cycle color modes
-    - Button D (GPIO 24): Reset to pimoroni mode
+    Dynamically assigns GPIO pins based on detected display model:
+    - Button A: Next photo
+    - Button B: Previous photo
+    - Button C: Cycle color modes
+    - Button D: Reset to pimoroni mode
     """
     def __init__(self, photo_frame):
         self.photo_frame = photo_frame
         self.busy = False  # Lock mechanism to prevent button presses during display
 
+        # Get GPIO pins from display configuration
+        pins = photo_frame.display_config['gpio_pins']
+        gpio_a = pins['button_a']
+        gpio_b = pins['button_b']
+        gpio_c = pins['button_c']
+        gpio_d = pins['button_d']
+        display_name = photo_frame.display_config['name']
+
         # Initialize buttons with 20ms debouncing
         try:
-            self.button_a = Button(5, bounce_time=0.02)  # Next photo
-            self.button_b = Button(6, bounce_time=0.02)  # Previous photo
-            self.button_c = Button(16, bounce_time=0.02)  # Cycle color mode
-            self.button_d = Button(24, bounce_time=0.02)  # Reset color mode
+            self.button_a = Button(gpio_a, bounce_time=0.02) 
+            self.button_b = Button(gpio_b, bounce_time=0.02)
+            self.button_c = Button(gpio_c, bounce_time=0.02)
+            self.button_d = Button(gpio_d, bounce_time=0.02)
 
             # Attach handlers
             self.button_a.when_pressed = self._on_button_a
@@ -231,12 +293,13 @@ class ButtonController:
             self.button_c.when_pressed = self._on_button_c
             self.button_d.when_pressed = self._on_button_d
 
-            logging.info('✅ Button controller initialized (GPIO 5,6,16,24)')
+            logging.info(f'✅ Button controller initialized for {display_name} (GPIO {gpio_a},{gpio_b},{gpio_c},{gpio_d})')
         except Exception as e:
             logging.warning(f'⚠️ Could not initialize buttons: {e}')
 
     def _on_button_a(self):
         """Button A: Next photo"""
+        logging.info('🔘 Button A pressed - Next photo')
         if not self.busy:
             self.busy = True
             try:
@@ -246,6 +309,7 @@ class ButtonController:
 
     def _on_button_b(self):
         """Button B: Previous photo"""
+        logging.info('🔘 Button B pressed - Previous photo')
         if not self.busy:
             self.busy = True
             try:
@@ -255,6 +319,8 @@ class ButtonController:
 
     def _on_button_c(self):
         """Button C: Cycle color modes"""
+        gpio_c = self.photo_frame.display_config['gpio_pins']['button_c']
+        logging.info(f'🔘 Button C pressed - Cycle color mode')
         if not self.busy:
             self.busy = True
             try:
@@ -264,6 +330,7 @@ class ButtonController:
 
     def _on_button_d(self):
         """Button D: Reset to pimoroni mode"""
+        logging.info('🔘 Button D pressed - Reset to pimoroni mode')
         if not self.busy:
             self.busy = True
             try:
@@ -388,23 +455,56 @@ class InkyPhotoFrame:
         """
         Auto-detect display model and return optimal saturation
         Different Inky models have different color palettes and need different saturations
-        Returns: (saturation, is_spectra)
+        Sets self.display_config with all display-specific properties
+        Returns: (saturation)
         """
         display_class = type(self.display).__name__
+        display_module = str(type(self.display).__module__).lower()
+        resolution = (self.width, self.height)
 
-        # Check display type from class name or resolution
-        if 'e673' in str(type(self.display).__module__).lower() or 'E673' in display_class:
-            logging.info('📺 Detected: Inky Impression 7.3" Spectra 2025 (6 colors)')
-            self.is_spectra = True
-        elif self.width == 800 and self.height == 480:
-            logging.info('📺 Detected: Inky Impression 7.3" Classic (7 colors)')
-            self.is_spectra = False
-        elif self.width == 1600 and self.height == 1200:
-            logging.info('📺 Detected: Inky Impression 13.3" 2025 (6 colors)')
-            self.is_spectra = True
-        else:
-            logging.info(f'📺 Unknown display: {self.width}x{self.height}')
-            self.is_spectra = False
+        # Try to match against known display configurations
+        self.display_config = None
+        for config_key, config in DISPLAY_CONFIGS.items():
+            detection = config['detection']
+
+            # Check by module/class name (most specific)
+            if 'module_contains' in detection:
+                if detection['module_contains'].lower() in display_module:
+                    self.display_config = config
+                    break
+            if 'class_contains' in detection and not self.display_config:
+                if detection['class_contains'] in display_class:
+                    self.display_config = config
+                    break
+
+            # Check by resolution (fallback)
+            if 'resolution' in detection and not self.display_config:
+                if detection['resolution'] == resolution:
+                    self.display_config = config
+                    break
+
+        # If no match found, create a minimal config from resolution
+        if not self.display_config:
+            logging.warning(f'⚠️ Unknown display: {self.width}x{self.height}')
+            self.display_config = {
+                'name': f'Unknown Display {self.width}x{self.height}',
+                'resolution': resolution,
+                'is_spectra': False,
+                'is_13inch': False,
+                'gpio_pins': {
+                    'button_a': 5,
+                    'button_b': 6,
+                    'button_c': 16,
+                    'button_d': 24,
+                },
+            }
+
+        # Set convenient attributes for backward compatibility
+        self.is_spectra = self.display_config['is_spectra']
+        self.is_13inch = self.display_config['is_13inch']
+
+        logging.info(f'📺 Detected: {self.display_config["name"]}')
+        logging.info(f'📊 GPIO pins: {self.display_config["gpio_pins"]}')
 
         # Return saturation based on color mode
         if self.color_mode == 'warmth_boost':
