@@ -54,6 +54,11 @@ Thumbs.db
 *.swp
 *.swo
 
+# Development / planning
+.planning/
+CLAUDE.md
+.claude/
+
 # Project specific
 .inky_history.json
 InkyPhotos/
